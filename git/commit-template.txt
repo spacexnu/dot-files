@@ -1,0 +1,60 @@
+# =============================================================================
+# GIT COMMIT MESSAGE TEMPLATE
+# =============================================================================
+# <type>(<scope>): <subject>
+# 
+# <body>
+# 
+# <footer>
+# 
+# =============================================================================
+# TYPES:
+# feat:     A new feature
+# fix:      A bug fix
+# docs:     Documentation only changes
+# style:    Changes that do not affect the meaning of the code
+#           (white-space, formatting, missing semi-colons, etc)
+# refactor: A code change that neither fixes a bug nor adds a feature
+# perf:     A code change that improves performance
+# test:     Adding missing or correcting existing tests
+# chore:    Changes to the build process or auxiliary tools
+#           and libraries such as documentation generation
+# 
+# SCOPE:
+# The scope could be anything specifying the place of the commit change.
+# For example: config, cli, api, core, etc.
+# 
+# SUBJECT:
+# The subject contains a succinct description of the change.
+# - Use the imperative, present tense: "change" not "changed" nor "changes"
+# - Don't capitalize the first letter
+# - No dot (.) at the end
+# 
+# BODY:
+# The body should include the motivation for the change and contrast this with
+# previous behavior.
+# 
+# FOOTER:
+# The footer should contain any information about Breaking Changes and is also
+# the place to reference GitHub issues that this commit closes.
+# 
+# Breaking Changes should start with the word BREAKING CHANGE: with a space or
+# two newlines. The rest of the commit message is then used for this.
+# 
+# EXAMPLES:
+# 
+# feat(auth): add ability to login with Google
+# 
+# Adds OAuth2 authentication with Google accounts.
+# Users can now login using their Google credentials.
+# 
+# Closes #123
+# 
+# fix(api): prevent race condition in request handler
+# 
+# The previous implementation allowed multiple simultaneous
+# requests to corrupt the internal state.
+# 
+# BREAKING CHANGE: api response format changed to include
+# a status object for better error handling.
+# =============================================================================

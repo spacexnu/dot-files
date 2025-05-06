@@ -1,0 +1,159 @@
+# =============================================================================
+# GIT CONFIGURATION
+# =============================================================================
+# This file contains Git configuration settings, aliases, and other customizations.
+# To use this file, create a symlink to it from your home directory:
+# ln -s ~/code/dot-files/git/.gitconfig ~/.gitconfig
+# or include it in your existing .gitconfig:
+# [include]
+#     path = ~/code/dot-files/git/.gitconfig
+
+[core]
+    # Use the global gitignore file
+    excludesfile = ~/code/dot-files/git/.gitignore_global
+    # Use a pager for long output
+    pager = less -FRX
+    # Use UTF-8 encoding
+    quotepath = false
+    # Prevent showing files whose names contain non-ASCII symbols as unversioned
+    precomposeunicode = true
+    # Use editor from environment or fall back to vim
+    editor = ${EDITOR:-vim}
+
+[color]
+    # Use colors in Git commands output when possible
+    ui = auto
+    interactive = auto
+    pager = true
+
+[color "branch"]
+    current = yellow bold
+    local = green bold
+    remote = cyan bold
+
+[color "diff"]
+    meta = yellow bold
+    frag = magenta bold
+    old = red bold
+    new = green bold
+    whitespace = red reverse
+
+[color "status"]
+    added = green bold
+    changed = yellow bold
+    untracked = red bold
+
+[diff]
+    # Use better, descriptive initials (c, i, w) instead of a/b
+    mnemonicPrefix = true
+    # Show renames/moves as such
+    renames = true
+    # Display submodule-related information
+    submodule = log
+    # Use more time to create better diffs
+    algorithm = patience
+
+[fetch]
+    # Remove remote branches that no longer exist on the remote
+    prune = true
+
+[pull]
+    # Rebase branches on top of fetched branches
+    rebase = true
+
+[push]
+    # Push only the current branch to the remote
+    default = current
+    # Push annotated tags when pushing branches
+    followTags = true
+
+[rebase]
+    # Automatically stash/unstash changes before/after rebasing
+    autoStash = true
+
+[merge]
+    # Include summaries of merged commits in newly created merge commit messages
+    log = true
+    # Use a better merge strategy
+    conflictstyle = diff3
+
+[alias]
+    # Basic shortcuts
+    st = status
+    ci = commit
+    co = checkout
+    br = branch
+    df = diff
+    dc = diff --cached
+    lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
+    lga = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative --all
+
+    # Commit shortcuts
+    cm = commit -m
+    cam = commit -am
+    amend = commit --amend
+    amendf = commit --amend --no-edit
+
+    # Branch management
+    new = checkout -b
+    rename = branch -m
+    delete = branch -d
+    forcedelete = branch -D
+
+    # Stash operations
+    save = stash save
+    pop = stash pop
+    apply = stash apply
+    list = stash list
+    drop = stash drop
+    clear = stash clear
+
+    # Show changes
+    changes = diff --name-status
+    staged = diff --staged
+    unstaged = diff
+    untracked = ls-files --others --exclude-standard
+
+    # Show history
+    history = log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short
+    last = log -1 HEAD
+    contributors = shortlog --summary --numbered
+
+    # Reset operations
+    unstage = reset HEAD --
+    discard = checkout --
+    uncommit = reset --soft HEAD~1
+
+    # Remote operations
+    remotes = remote -v
+    pushf = push --force-with-lease
+    publish = push -u origin HEAD
+    unpublish = push origin --delete
+
+    # Utility commands
+    aliases = config --get-regexp alias
+    tags = tag -l
+    branches = branch -a
+    remotes = remote -v
+    stashes = stash list
+    cleanup = !git branch --merged | grep -v '\\*\\|master\\|main\\|develop' | xargs -n 1 git branch -d
+    fixup = !sh -c 'git commit --fixup=$1' -
+    squash = !sh -c 'git commit --squash=$1' -
+    wip = !git add -A && git commit -m 'WIP'
+    unwip = !git log -n 1 | grep -q -c 'WIP' && git reset HEAD~1
+
+[commit]
+    # Use custom commit template
+    template = ~/code/dot-files/git/commit-template.txt
+
+[help]
+    # Automatically correct and execute mistyped commands
+    autocorrect = 1
+
+[credential]
+    # Cache credentials for 1 hour
+    helper = cache --timeout=3600
+
+[init]
+    # Set default branch name to main
+    defaultBranch = main

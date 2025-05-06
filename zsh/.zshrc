@@ -1,39 +1,50 @@
+# =============================================================================
+# ZSH CONFIGURATION FILE
+# =============================================================================
+# This is the main Zsh configuration file that sources modular configuration files.
+
+# -----------------------------------------------------------------------------
+# Completion System Configuration
+# -----------------------------------------------------------------------------
+# Add custom completion functions directory to fpath
 fpath+=~/.zfunc
+# Initialize the completion system and load completion functions
 autoload -Uz compinit && compinit
 
-# starship config
-export STARSHIP_CONFIG=~/code/dot-files/starship/starship.toml
+# -----------------------------------------------------------------------------
+# Load Modular Configuration Files
+# -----------------------------------------------------------------------------
+# Source environment variables
+source ~/code/dot-files/zsh/config/env.zsh
+
+# Source aliases
+source ~/code/dot-files/zsh/config/aliases.zsh
+
+# Source functions
+source ~/code/dot-files/zsh/config/functions.zsh
+
+# -----------------------------------------------------------------------------
+# Prompt Configuration - Starship
+# -----------------------------------------------------------------------------
+# Initialize Starship prompt
 eval "$(starship init zsh)"
 
-# Enable colors on ls command
-export CLICOLOR=1
-export LSCOLORS=GxFxCxDxBxegedabagaced
-
-# load fzf
+# -----------------------------------------------------------------------------
+# Fuzzy Finder (FZF) Configuration
+# -----------------------------------------------------------------------------
+# Load FZF key bindings and completion for Zsh
 source <(fzf --zsh)
 
-# aliases
-alias brewupd="brew update && brew upgrade && brew cleanup"
-alias tn="tmux new-session -s "
-alias tat="tmux attach -t "
-alias tls="tmux ls"
-alias ls="ls -G"
-alias vim='nvim'
-alias ls='ls --color=auto'
-alias ll='ls -latr --color=auto'
-alias ss='nvim $(fzf -m --preview="bat --color=always {}")'
-
-
-# neofetch
-
-# Carrega intro ao abrir shell interativo
+# -----------------------------------------------------------------------------
+# Shell Startup
+# -----------------------------------------------------------------------------
+# Load custom intro message when opening an interactive shell
 if [[ $- == *i* ]]; then
   source ~/.cos_intro.zsh
 fi
 
-# Created by `pipx` on 2024-08-07 22:44:29
-export PATH="$PATH:/Users/spacexnu/.config/emacs/bin:/Users/amedrado/.local/bin"
-
-#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
-export SDKMAN_DIR="$HOME/.sdkman"
+# -----------------------------------------------------------------------------
+# Development Tools Configuration
+# -----------------------------------------------------------------------------
+# SDKMAN configuration - Must be at the end of the file
 [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
