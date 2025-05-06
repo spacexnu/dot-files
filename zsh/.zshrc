@@ -2,7 +2,7 @@ fpath+=~/.zfunc
 autoload -Uz compinit && compinit
 
 # starship config
-export STARSHIP_CONFIG=~/code/dot-files/starship.toml
+export STARSHIP_CONFIG=~/code/dot-files/starship/starship.toml
 eval "$(starship init zsh)"
 
 # Enable colors on ls command
@@ -24,12 +24,16 @@ alias ll='ls -latr --color=auto'
 alias ss='nvim $(fzf -m --preview="bat --color=always {}")'
 
 
-neofetch
+# neofetch
+
+# Carrega intro ao abrir shell interativo
+if [[ $- == *i* ]]; then
+  source ~/.cos_intro.zsh
+fi
 
 # Created by `pipx` on 2024-08-07 22:44:29
-export PATH="$PATH:/Users/amedrado/.config/emacs/bin:/Users/amedrado/.local/bin:/usr/local/opt/mysql-client/bin"
+export PATH="$PATH:/Users/spacexnu/.config/emacs/bin:/Users/amedrado/.local/bin"
 
 #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
 export SDKMAN_DIR="$HOME/.sdkman"
 [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
-export PATH="/usr/local/opt/mysql-client/bin:$PATH"
