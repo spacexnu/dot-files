@@ -49,6 +49,7 @@ cos_quote() {
 # Gathers system information and displays a formatted welcome message
 cos_intro() {
   # Gather system information
+  operator_name="$(whoami)"                                    # Get the username
   host_name="$(hostname)"                                      # Get the hostname
   kernel_version="$(uname -r)"                                 # Get kernel version
   uptime_read="$(uptime | cut -d ',' -f1)"                     # Get system uptime
@@ -59,7 +60,7 @@ cos_intro() {
   echo ""
   echo "CENTRAL OPERATING SYSTEM - COS"
   echo "──────────────────────────────"
-  echo "  Operator    : spacexnu"
+  echo "  Operator    : $operator_name"
   echo "  Uptime      : $uptime_read"
   echo "  Hostname    : $host_name"
   echo "  IP Address  : $ip"
