@@ -74,4 +74,4 @@ cos_intro() {
 # Execute the Welcome Message
 # -----------------------------------------------------------------------------
 # Display the welcome message with colorized output using lolcat
-cos_intro | lolcat
+cos_intro
