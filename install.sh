@@ -60,17 +60,17 @@ backup_file() {
 create_symlink() {
     local source_file="$1"
     local target_file="$2"
-    
+
     if [ ! -e "$source_file" ]; then
         print_error "Source file $source_file does not exist"
         return 1
     fi
-    
+
     backup_file "$target_file"
-    
+
     print_info "Creating symlink from $source_file to $target_file"
     ln -s "$source_file" "$target_file"
-    
+
     if [ $? -eq 0 ]; then
         print_success "Symlink created successfully"
         return 0
@@ -126,29 +126,28 @@ install_dependencies() {
             else
                 print_success "Homebrew is already installed"
             fi
-            
+
             print_info "Installing required packages with Homebrew..."
             brew update
-            brew install zsh starship fzf tmux neovim lolcat fortune
+            brew install fish fzf tmux neovim lolcat fortune
             ;;
         debian)
             print_info "Installing required packages with apt..."
             sudo apt update
-            sudo apt install -y zsh starship fzf tmux neovim lolcat fortune
+            sudo apt install -y fish fzf tmux neovim lolcat fortune
             ;;
         redhat)
             print_info "Installing required packages with dnf/yum..."
             if command_exists dnf; then
-                sudo dnf install -y zsh fzf tmux neovim lolcat fortune
+                sudo dnf install -y fish fzf tmux neovim lolcat fortune
             else
-                sudo yum install -y zsh fzf tmux neovim lolcat fortune
+                sudo yum install -y fish fzf tmux neovim lolcat fortune
             fi
             ;;
         *)
             print_warning "Automatic dependency installation is not supported on this OS."
             print_info "Please install the following dependencies manually:"
-            print_info "- zsh"
-            print_info "- starship"
+            print_info "- fish"
             print_info "- fzf"
             print_info "- tmux"
             print_info "- neovim"
@@ -174,14 +173,11 @@ print_section "Creating Symbolic Links"
 # Create ~/.config directory if it doesn't exist
 mkdir -p "$HOME/.config"
 
-# Zsh
-create_symlink "$DOTFILES_DIR/zsh/.zshrc" "$HOME/.zshrc"
-create_symlink "$DOTFILES_DIR/zsh/.zprofile" "$HOME/.zprofile"
-create_symlink "$DOTFILES_DIR/zsh/.cos_intro.zsh" "$HOME/.cos_intro.zsh"
+# Fish
+mkdir -p "$HOME/.config/fish"
+create_symlink "$DOTFILES_DIR/fish/config.fish" "$HOME/.config/fish/config.fish"
+create_symlink "$DOTFILES_DIR/fish/cos_intro.fish" "$HOME/.config/fish/cos_intro.fish"
 
-# Starship
-mkdir -p "$HOME/.config/starship"
-create_symlink "$DOTFILES_DIR/starship/starship.toml" "$HOME/.config/starship/starship.toml"
 
 # Tmux
 create_symlink "$DOTFILES_DIR/tmux/.tmux.conf" "$HOME/.tmux.conf"
@@ -208,17 +204,17 @@ fi
 print_section "Installation Complete"
 
 print_success "Dotfiles have been installed successfully!"
-print_info "Please restart your terminal or run 'source ~/.zshrc' to apply the changes."
+print_info "Please restart your terminal to apply the changes."
 
-if [ "$SHELL" != "$(which zsh)" ]; then
-    print_warning "Your current shell is not Zsh."
-    read -p "Do you want to change your default shell to Zsh? (y/n) " -n 1 -r
+if [ "$SHELL" != "$(which fish)" ]; then
+    print_warning "Your current shell is not Fish."
+    read -p "Do you want to change your default shell to Fish? (y/n) " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        chsh -s "$(which zsh)"
-        print_success "Default shell changed to Zsh"
+        chsh -s "$(which fish)"
+        print_success "Default shell changed to Fish"
     else
-        print_info "Shell not changed. You can manually switch to Zsh with 'chsh -s $(which zsh)'"
+        print_info "Shell not changed. You can manually switch to Fish with 'chsh -s $(which fish)'"
     fi
 fi
 
