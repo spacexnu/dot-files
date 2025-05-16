@@ -47,10 +47,13 @@ print_info() {
 
 # Create a backup of a file if it exists
 backup_file() {
-    if [ -f "$1" ] || [ -d "$1" ] || [ -L "$1" ]; then
-        local backup_file="$1.backup.$(date +%Y%m%d%H%M%S)"
-        print_info "Backing up $1 to $backup_file"
-        mv "$1" "$backup_file"
+    local target="$1"
+    if [ -e "$target" ]; then
+        local base_name="$(basename "$target")"
+        local dir_name="$(dirname "$target")"
+        local backup_file="$dir_name/${base_name}.backup.$(date +%Y%m%d%H%M%S)"
+        print_info "Backing up $target to $backup_file"
+        mv "$target" "$backup_file"
         return 0
     fi
     return 1
@@ -66,10 +69,15 @@ create_symlink() {
         return 1
     fi
 
+    if [ -L "$target_file" ] && [ "$(readlink "$target_file")" = "$source_file" ]; then
+        print_info "Symlink for $target_file already exists and is correct. Skipping."
+        return 0
+    fi
+
     backup_file "$target_file"
 
     print_info "Creating symlink from $source_file to $target_file"
-    ln -s "$source_file" "$target_file"
+    ln -sf "$source_file" "$target_file"
 
     if [ $? -eq 0 ]; then
         print_success "Symlink created successfully"
@@ -117,6 +125,8 @@ fi
 # -----------------------------------------------------------------------------
 print_section "Installing Dependencies"
 
+DEPENDENCIES=(fish fzf tmux neovim lolcat fortune)
+
 install_dependencies() {
     case $OS in
         macos)
@@ -129,30 +139,24 @@ install_dependencies() {
 
             print_info "Installing required packages with Homebrew..."
             brew update
-            brew install fish fzf tmux neovim lolcat fortune
+            brew install "${DEPENDENCIES[@]}"
             ;;
         debian)
             print_info "Installing required packages with apt..."
             sudo apt update
-            sudo apt install -y fish fzf tmux neovim lolcat fortune
+            sudo apt install -y "${DEPENDENCIES[@]}"
             ;;
         redhat)
             print_info "Installing required packages with dnf/yum..."
             if command_exists dnf; then
-                sudo dnf install -y fish fzf tmux neovim lolcat fortune
+                sudo dnf install -y "${DEPENDENCIES[@]}"
             else
-                sudo yum install -y fish fzf tmux neovim lolcat fortune
+                sudo yum install -y "${DEPENDENCIES[@]}"
             fi
             ;;
         *)
             print_warning "Automatic dependency installation is not supported on this OS."
-            print_info "Please install the following dependencies manually:"
-            print_info "- fish"
-            print_info "- fzf"
-            print_info "- tmux"
-            print_info "- neovim"
-            print_info "- lolcat"
-            print_info "- fortune"
+            print_info "Please install the following dependencies manually: ${DEPENDENCIES[*]}"
             ;;
     esac
 }
@@ -160,7 +164,7 @@ install_dependencies() {
 read -p "Do you want to install dependencies? (y/n) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    install_dependencies
+    install_dependencies || { print_error "Dependency installation failed"; exit 1; }
 else
     print_info "Skipping dependency installation"
 fi
@@ -173,24 +177,17 @@ print_section "Creating Symbolic Links"
 # Create ~/.config directory if it doesn't exist
 mkdir -p "$HOME/.config"
 
+
 # Fish
 mkdir -p "$HOME/.config/fish"
 create_symlink "$DOTFILES_DIR/fish/config.fish" "$HOME/.config/fish/config.fish"
 create_symlink "$DOTFILES_DIR/fish/cos_intro.fish" "$HOME/.config/fish/cos_intro.fish"
 
-
 # Tmux
 create_symlink "$DOTFILES_DIR/tmux/.tmux.conf" "$HOME/.tmux.conf"
 
-# Vim
-# create_symlink "$DOTFILES_DIR/vim/.vimrc" "$HOME/.vimrc"
-
 # Neovim
-# mkdir -p "$HOME/.config/nvim"
 create_symlink "$DOTFILES_DIR/nvim" "$HOME/.config/nvim"
-# create_symlink "$DOTFILES_DIR/nvim/init.lua" "$HOME/.config/nvim/init.lua"
-# create_symlink "$DOTFILES_DIR/nvim/lua" "$HOME/.config/nvim/lua"
-# create_symlink "$DOTFILES_DIR/nvim/after" "$HOME/.config/nvim/after"
 
 # iTerm2 (macOS only)
 if [ "$OS" == "macos" ]; then
@@ -206,15 +203,21 @@ print_section "Installation Complete"
 print_success "Dotfiles have been installed successfully!"
 print_info "Please restart your terminal to apply the changes."
 
-if [ "$SHELL" != "$(which fish)" ]; then
+
+CURRENT_SHELL_NAME="$(basename "$SHELL")"
+FISH_PATH="$(command -v fish)"
+if [ "$CURRENT_SHELL_NAME" != "fish" ]; then
     print_warning "Your current shell is not Fish."
     read -p "Do you want to change your default shell to Fish? (y/n) " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        chsh -s "$(which fish)"
-        print_success "Default shell changed to Fish"
+        if chsh -s "$FISH_PATH"; then
+            print_success "Default shell changed to Fish"
+        else
+            print_error "Failed to change default shell. Try running: chsh -s $FISH_PATH"
+        fi
     else
-        print_info "Shell not changed. You can manually switch to Fish with 'chsh -s $(which fish)'"
+        print_info "Shell not changed. You can manually switch to Fish with 'chsh -s $FISH_PATH'"
     fi
 fi
 
