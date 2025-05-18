@@ -11,9 +11,16 @@ set -U fish_user_paths '/Applications/IntelliJ IDEA.app/Contents/MacOS' $fish_us
 set -x CLICOLOR 1
 set -x LSCOLORS GxFxCxDxBxegedabagaced
 
-# Check and load fzf if it is available 
-if type -q fzf
-    fzf --fish | source
+# Check and load fzf if it is available and compatible
+if type -q fzf && fzf --version >/dev/null 2>&1
+    if status is-interactive
+        if test -f ~/.fzf/shell/key-bindings.fish
+            source ~/.fzf/shell/key-bindings.fish
+        end
+        if test -f ~/.fzf/shell/completion.fish
+            source ~/.fzf/shell/completion.fish
+        end
+    end
 end
 
 # Aliases
