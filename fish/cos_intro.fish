@@ -1,16 +1,8 @@
-# =============================================================================
-# SHELL WELCOME MESSAGE SCRIPT
-# =============================================================================
-# This script displays a stylized welcome message when opening a new shell,
-# showing system information and a random quote.
-# Dependencies: lolcat (for colorized output), fortune (for random messages)
+# Constant for banner header
+set COS_BANNER "CENTRAL OPERATING SYSTEM - COS"
+set COS_DIVIDER "──────────────────────────────"
 
-# -----------------------------------------------------------------------------
-# Random Quote Function
-# -----------------------------------------------------------------------------
-# Selects and returns a random quote from the predefined list
 function cos_quote
-  # Array of cyberpunk/AI-themed quotes
   set quotes \
      "Ghost in the machine." \
      "AI doesn't crash. It adapts." \
@@ -38,42 +30,61 @@ function cos_quote
      "Truth is compressed. Lies are verbose." \
      "Enlightenment is just another unauthorized access." \
      "In the beginning was the command line — and it was good."
-  
-  # Select a random quote from the array
-  # Fish uses random to get a random number between 1 and array size
   set rand (random 1 (count $quotes))
   echo $quotes[$rand]
 end
 
-# -----------------------------------------------------------------------------
-# Main Welcome Message Function
-# -----------------------------------------------------------------------------
-# Gathers system information and displays a formatted welcome message
-function cos_intro
-  # Gather system information
-  set operator_name (whoami)                                    # Get the username
-  set host_name (hostname)                                      # Get the hostname
-  set kernel_version (uname -r)                                 # Get kernel version
-  set uptime_read (uptime | cut -d ',' -f1)                     # Get system uptime
-  set ip (ipconfig getifaddr en0 2>/dev/null || echo 'no ip')   # Get IP address (macOS)
-  set quote (cos_quote)                                         # Get a random quote
+function get_user_name
+  echo (whoami)
+end
 
-  # Display the welcome message with system information
+function get_host_name
+  echo (hostname)
+end
+
+function get_kernel_version
+  echo (uname -r)
+end
+
+function get_uptime
+  echo (uptime | cut -d ',' -f1)
+end
+
+function get_ip_address
+  switch (uname)
+    case 'Darwin'
+      echo (ipconfig getifaddr en0 2>/dev/null || echo 'no ip')
+    case 'Linux'
+      set ip (hostname -I | awk '{print $1}' 2>/dev/null)
+      if test -z "$ip"
+        echo 'no ip'
+      else
+        echo $ip
+      end
+    case '*'
+      echo 'unknown'
+  end
+end
+
+function cos_intro
+  set user_name (get_user_name)
+  set host_name (get_host_name)
+  set kernel_version (get_kernel_version)
+  set uptime_read (get_uptime)
+  set ip (get_ip_address)
+  set quote (cos_quote)
+
   echo ""
-  echo "CENTRAL OPERATING SYSTEM - COS"
-  echo "──────────────────────────────"
-  echo "  Operator    : $operator_name"
+  echo $COS_BANNER
+  echo $COS_DIVIDER
+  echo "  Operator    : $user_name"
   echo "  Uptime      : $uptime_read"
   echo "  Hostname    : $host_name"
   echo "  IP Address  : $ip"
   echo "  Kernel      : $kernel_version"
-  echo "──────────────────────────────"
+  echo $COS_DIVIDER
   echo "  $quote"
   echo ""
 end
 
-# -----------------------------------------------------------------------------
-# Execute the Welcome Message
-# -----------------------------------------------------------------------------
-# Display the welcome message with colorized output using lolcat
 cos_intro
