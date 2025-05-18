@@ -87,4 +87,6 @@ function cos_intro
   echo ""
 end
 
-cos_intro
+if status is-interactive
+  cos_intro
+end
