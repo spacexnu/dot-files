@@ -46,5 +46,15 @@ fi
 # -----------------------------------------------------------------------------
 # Development Tools Configuration
 # -----------------------------------------------------------------------------
+#NVM configuration
+export NVM_DIR="$HOME/.nvm"
+  [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
+  [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"
+
 # SDKMAN configuration - Must be at the end of the file
 [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/Users/spacexnu/.lmstudio/bin"
+# End of LM Studio CLI section
+
