@@ -31,7 +31,7 @@ Before installing these dotfiles, ensure you have the following dependencies ins
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/yourusername/dotfiles.git ~/.dotfiles
+   git clone https://github.com/spacexnu/dotfiles.git ~/.dotfiles
    ```
 
 2. Navigate to the dotfiles directory:
@@ -39,7 +39,14 @@ Before installing these dotfiles, ensure you have the following dependencies ins
    cd ~/.dotfiles
    ```
 
-3. Create symbolic links to the configuration files you want to use:
+3. Run the installation script:
+   ```bash
+   ./install.sh
+   ```
+
+   The script will guide you through the installation process, allowing you to choose which configurations to install.
+
+4. Alternatively, you can manually create symbolic links to the configuration files you want to use:
    ```bash
    # Example for Zsh
    ln -s ~/.dotfiles/zsh/.zshrc ~/.zshrc
@@ -86,10 +93,6 @@ You can customize these dotfiles to suit your preferences:
 1. Fork this repository
 2. Make your changes
 3. Update your local installation
-
-## Screenshots
-
-[Screenshots of the configured environment will be added here]
 
 ## License
 
