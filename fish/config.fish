@@ -7,6 +7,8 @@ set -U fish_user_paths /Users/spacexnu/.local/bin $fish_user_paths
 set -U fish_user_paths /usr/local/opt/mysql-client/bin $fish_user_paths
 set -U fish_user_paths '/Applications/IntelliJ IDEA.app/Contents/MacOS' $fish_user_paths
 
+set -gx GPG_TTY (tty)
+
 # Enable colors on ls command
 set -x CLICOLOR 1
 set -x LSCOLORS GxFxCxDxBxegedabagaced
