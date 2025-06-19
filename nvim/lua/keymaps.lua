@@ -18,6 +18,19 @@ map_telescope("<leader>fg", "live_grep", "Live grep")
 map_telescope("<leader>fb", "buffers", "Find buffers")
 map_telescope("<leader>fh", "help_tags", "Find help")
 
+-- LSP Navigation (via Telescope)
+map_telescope("gd", "lsp_definitions", "Go to definition")
+map_telescope("gr", "lsp_references", "Find references")
+map_telescope("gi", "lsp_implementations", "Go to implementation")
+map_telescope("<leader>td", "lsp_type_definitions", "Go to type definition")
+map_telescope("<leader>ds", "lsp_document_symbols", "Document symbols")
+map_telescope("<leader>ws", "lsp_workspace_symbols", "Workspace symbols")
+map_telescope("<leader>ca", "lsp_code_actions", "Code actions")
+map_telescope("<leader>rn", "lsp_rename", "Rename symbol")
+
+map_telescope("<leader>ld", "diagnostics", "Show diagnostics")
+map_telescope("<leader>lq", "quickfix", "Quickfix list")
+
 -- Buffers
 map("n", "<leader>bd", ":bdelete<CR>", { desc = "Close buffer", unpack(opts) })
 
