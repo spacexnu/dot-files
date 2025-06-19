@@ -1,8 +1,10 @@
-vim.o.background = "dark"
-vim.cmd.colorscheme("vscode")
-
-require("vscode").setup({
-    transparent = false,
-    italic_comments = true,
-    disable_nvimtree_bg = true,
-})
+return {
+  {
+    "artanikin/vim-synthwave84",
+    lazy = false,
+    priority = 1000,
+    config = function()
+      vim.cmd("colorscheme synthwave84")
+    end,
+  },
+}

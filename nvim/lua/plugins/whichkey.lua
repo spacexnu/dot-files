@@ -1,5 +1,6 @@
-require("which-key").setup({
-  plugins = {
-    spelling = { enabled = true },
+return {
+  {
+    "folke/which-key.nvim",
+    config = true,
   },
-})
+}

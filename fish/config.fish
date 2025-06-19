@@ -35,6 +35,9 @@ alias ss "nvim (fzf -m --preview='bat --color=always {}')"
 
 test -e {$HOME}/.iterm2_shell_integration.fish; and source {$HOME}/.iterm2_shell_integration.fish
 
+set -gx EDITOR nvim
+set -gx GIT_EDITOR nvim
+
 # cat ~/.config/fish/cos_intro.txt
 source ~/.config/fish/cos_intro.fish
 
