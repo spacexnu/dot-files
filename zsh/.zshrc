@@ -1,60 +1,49 @@
 # =============================================================================
 # ZSH CONFIGURATION FILE
 # =============================================================================
-# This is the main Zsh configuration file that sources modular configuration files.
 
 # -----------------------------------------------------------------------------
 # Completion System Configuration
 # -----------------------------------------------------------------------------
-# Add custom completion functions directory to fpath
 fpath+=~/.zfunc
-# Initialize the completion system and load completion functions
-autoload -Uz compinit && compinit
+autoload -Uz compinit
+compinit -d "${XDG_CACHE_HOME:-$HOME/.cache}/zcompdump"
 
 # -----------------------------------------------------------------------------
 # Load Modular Configuration Files
 # -----------------------------------------------------------------------------
-# Source environment variables
-source ~/code/dot-files/zsh/config/env.zsh
-
-# Source aliases
-source ~/code/dot-files/zsh/config/aliases.zsh
-
-# Source functions
-source ~/code/dot-files/zsh/config/functions.zsh
-
-# -----------------------------------------------------------------------------
-# Prompt Configuration - Starship
-# -----------------------------------------------------------------------------
-# Initialize Starship prompt
-eval "$(starship init zsh)"
+[[ -f ~/code/dot-files/zsh/config/env.zsh ]] && source ~/code/dot-files/zsh/config/env.zsh
+[[ -f ~/code/dot-files/zsh/config/aliases.zsh ]] && source ~/code/dot-files/zsh/config/aliases.zsh
+[[ -f ~/code/dot-files/zsh/config/functions.zsh ]] && source ~/code/dot-files/zsh/config/functions.zsh
 
 # -----------------------------------------------------------------------------
 # Fuzzy Finder (FZF) Configuration
 # -----------------------------------------------------------------------------
-# Load FZF key bindings and completion for Zsh
-source <(fzf --zsh)
-
-# -----------------------------------------------------------------------------
-# Shell Startup
-# -----------------------------------------------------------------------------
-# Load custom intro message when opening an interactive shell
-if [[ $- == *i* ]]; then
-  source ~/.cos_intro.zsh
+if command -v fzf >/dev/null 2>&1; then
+  source "$(brew --prefix)/opt/fzf/shell/completion.zsh"
+  source "$(brew --prefix)/opt/fzf/shell/key-bindings.zsh"
 fi
 
 # -----------------------------------------------------------------------------
 # Development Tools Configuration
 # -----------------------------------------------------------------------------
-#NVM configuration
+# NVM
 export NVM_DIR="$HOME/.nvm"
-  [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
-  [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"
+[[ -s "/opt/homebrew/opt/nvm/nvm.sh" ]] && source "/opt/homebrew/opt/nvm/nvm.sh"
+[[ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ]] && source "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"
 
-# SDKMAN configuration - Must be at the end of the file
+# SDKMAN
 [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
 
-# Added by LM Studio CLI (lms)
-export PATH="$PATH:/Users/spacexnu/.lmstudio/bin"
-# End of LM Studio CLI section
+# LM Studio
+path+=("$HOME/.lmstudio/bin")
 
+# -----------------------------------------------------------------------------
+# Prompt Configuration - Starship
+# -----------------------------------------------------------------------------
+eval "$(starship init zsh)"
+
+# -----------------------------------------------------------------------------
+# Shell Startup
+# -----------------------------------------------------------------------------
+[[ $- == *i* && -f ~/.cos_intro.zsh ]] && source ~/.cos_intro.zsh

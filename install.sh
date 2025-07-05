@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 # =============================================================================
 # DOTFILES INSTALLATION SCRIPT
@@ -20,8 +21,17 @@ YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Get the directory where the script is located
+ # Get the directory where the script is located
 DOTFILES_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Redirect all output to a log file as well as the terminal
+exec > >(tee -a "$HOME/dotfiles-install.log") 2>&1
+
+# Handle auto-confirm flag
+AUTO_CONFIRM=false
+if [[ "${1:-}" == "--yes" ]]; then
+  AUTO_CONFIRM=true
+fi
 
 # -----------------------------------------------------------------------------
 # Helper Functions
@@ -113,6 +123,10 @@ confirm() {
   local prompt="$1"
   local default="${2:-n}"
 
+  if $AUTO_CONFIRM; then
+    return 0
+  fi
+
   if [ "$default" = "y" ]; then
     local options="Y/n"
   else
@@ -152,6 +166,10 @@ elif [ "$(uname)" == "Linux" ]; then
   else
     OS="linux"
     print_success "Linux detected"
+  fi
+  if grep -qi microsoft /proc/version 2>/dev/null; then
+    OS="wsl"
+    print_success "WSL detected"
   fi
 elif [ "$(uname -o 2>/dev/null)" == "Msys" ] || [ "$(uname -o 2>/dev/null)" == "Cygwin" ] || [ -n "$WSLENV" ]; then
   OS="windows"
@@ -202,6 +220,22 @@ install_dependencies() {
   esac
 }
 
+# Offer to install Nerd Fonts
+if confirm "Do you want to install Nerd Fonts?" "n"; then
+  case $OS in
+    macos)
+      brew tap homebrew/cask-fonts
+      brew install --cask font-fira-code-nerd-font
+      ;;
+    debian)
+      sudo apt install -y fonts-firacode || print_warning "Failed to install Fira Code Nerd Font via apt"
+      ;;
+    *)
+      print_info "Please install the Fira Code Nerd Font manually from https://www.nerdfonts.com if it's not available for your system."
+      ;;
+  esac
+fi
+
 if confirm "Do you want to install dependencies?" "n"; then
   install_dependencies || { print_error "Dependency installation failed"; exit 1; }
 else
@@ -228,6 +262,7 @@ if confirm "Do you want to install Neovim configuration?" "y"; then
     exit 1
   fi
 
+  print_info "Checking for lazy.nvim directory at $HOME/.local/share/nvim/lazy/lazy.nvim"
   LAZY_DIR="$HOME/.local/share/nvim/lazy/lazy.nvim"
   if [ ! -d "$LAZY_DIR" ]; then
     print_info "Cloning lazy.nvim..."
@@ -240,6 +275,7 @@ if confirm "Do you want to install Neovim configuration?" "y"; then
   fi
 
   print_success "Neovim configuration installed successfully"
+  print_info "You can launch Neovim with 'nvim' and it will use the lazy.nvim setup."
 else
   print_info "Skipping Neovim configuration"
 fi

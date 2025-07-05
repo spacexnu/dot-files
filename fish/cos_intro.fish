@@ -88,6 +88,6 @@ function cos_intro
 end
 
 if status is-interactive
-    cos_intro | lolcat
+    # cos_intro | lolcat
+    cos_intro
 end
-

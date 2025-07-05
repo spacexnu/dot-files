@@ -11,7 +11,7 @@ set -gx GPG_TTY (tty)
 
 # Enable colors on ls command
 set -x CLICOLOR 1
-set -x LSCOLORS GxFxCxDxBxegedabagaced
+# set -x LSCOLORS GxFxCxDxBxegedabagaced
 
 # Check and load fzf if it is available and compatible
 if type -q fzf && fzf --version >/dev/null 2>&1
