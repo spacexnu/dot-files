@@ -157,3 +157,6 @@
 [init]
     # Set default branch name to main
     defaultBranch = main
+[user]
+	name = Adler Medrado
+	email = adler@adlermedrado.com.br
