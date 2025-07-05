@@ -10,7 +10,7 @@ set -euo pipefail
 # The script will:
 # 1. Detect your operating system
 # 2. Install dependencies (optional)
-# 3. Set up configurations for various tools (Neovim, Vim, Fish, Zsh, Tmux, etc.)
+# 3. Set up configurations for Zsh, Tmux, Starship, and related tools
 # 4. Create symbolic links to configuration files
 # 5. Offer to change your default shell to Fish
 
@@ -184,7 +184,7 @@ fi
 print_section "Installing Dependencies"
 
 # List of dependencies to install
-DEPENDENCIES=(fish fzf tmux neovim lolcat fortune starship)
+DEPENDENCIES=(fzf tmux lolcat fortune starship)
 
 install_dependencies() {
   case $OS in
@@ -224,8 +224,15 @@ install_dependencies() {
 if confirm "Do you want to install Nerd Fonts?" "n"; then
   case $OS in
     macos)
-      brew tap homebrew/cask-fonts
-      brew install --cask font-fira-code-nerd-font
+      FONT_URL="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.zip"
+      FONT_DEST="$HOME/Library/Fonts"
+      print_info "Downloading FiraCode Nerd Font..."
+      curl -L -o /tmp/FiraCode.zip "$FONT_URL" && unzip -o /tmp/FiraCode.zip -d "$FONT_DEST"
+      if [ $? -eq 0 ]; then
+        print_success "Fira Code Nerd Font installed to $FONT_DEST"
+      else
+        print_error "Failed to install Fira Code Nerd Font. Please install it manually from https://www.nerdfonts.com/font-downloads"
+      fi
       ;;
     debian)
       sudo apt install -y fonts-firacode || print_warning "Failed to install Fira Code Nerd Font via apt"
@@ -243,60 +250,12 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-# Install Neovim configuration (lazy.nvim based)
-# -----------------------------------------------------------------------------
-if confirm "Do you want to install Neovim configuration?" "y"; then
-  print_section "Installing Neovim Configuration"
-
-  NEOVIM_CONFIG_DIR="$HOME/.config/nvim"
-
-  if [ -d "$NEOVIM_CONFIG_DIR" ]; then
-    backup_file "$NEOVIM_CONFIG_DIR"
-  fi
-
-  create_symlink "$DOTFILES_DIR/nvim" "$NEOVIM_CONFIG_DIR"
-
-  # Check if git is installed before cloning
-  if ! command_exists git; then
-    print_error "Git is not installed. Please install git and try again."
-    exit 1
-  fi
-
-  print_info "Checking for lazy.nvim directory at $HOME/.local/share/nvim/lazy/lazy.nvim"
-  LAZY_DIR="$HOME/.local/share/nvim/lazy/lazy.nvim"
-  if [ ! -d "$LAZY_DIR" ]; then
-    print_info "Cloning lazy.nvim..."
-    git clone --filter=blob:none https://github.com/folke/lazy.nvim.git "$LAZY_DIR" || {
-      print_error "Failed to clone lazy.nvim"
-      exit 1
-    }
-  else
-    print_info "lazy.nvim already exists, skipping clone."
-  fi
-
-  print_success "Neovim configuration installed successfully"
-  print_info "You can launch Neovim with 'nvim' and it will use the lazy.nvim setup."
-else
-  print_info "Skipping Neovim configuration"
-fi
-
-# -----------------------------------------------------------------------------
 # Symlink Creation
 # -----------------------------------------------------------------------------
 print_section "Creating Symbolic Links"
 
 # Create ~/.config directory if it doesn't exist
 mkdir -p "$HOME/.config"
-
-# Fish configuration
-if confirm "Do you want to install Fish shell configuration?" "y"; then
-  mkdir -p "$HOME/.config/fish"
-  create_symlink "$DOTFILES_DIR/fish/config.fish" "$HOME/.config/fish/config.fish"
-  create_symlink "$DOTFILES_DIR/fish/cos_intro.fish" "$HOME/.config/fish/cos_intro.fish"
-  print_success "Fish configuration installed"
-else
-  print_info "Skipping Fish configuration"
-fi
 
 # Zsh configuration
 if confirm "Do you want to install Zsh shell configuration?" "y"; then
@@ -321,21 +280,6 @@ else
   print_info "Skipping Zsh configuration"
 fi
 
-# Vim configuration
-if confirm "Do you want to install Vim configuration?" "y"; then
-  create_symlink "$DOTFILES_DIR/vim/.vimrc" "$HOME/.vimrc"
-  print_success "Vim configuration installed"
-else
-  print_info "Skipping Vim configuration"
-fi
-
-# IdeaVim configuration
-if confirm "Do you want to install IdeaVim configuration?" "y"; then
-  create_symlink "$DOTFILES_DIR/ideavim/.ideavimrc" "$HOME/.ideavimrc"
-  print_success "IdeaVim configuration installed"
-else
-  print_info "Skipping IdeaVim configuration"
-fi
 
 # Tmux configuration
 if confirm "Do you want to install Tmux configuration?" "y"; then
@@ -353,8 +297,7 @@ fi
 if confirm "Do you want to install Git configuration?" "y"; then
   create_symlink "$DOTFILES_DIR/git/.gitconfig" "$HOME/.gitconfig"
   create_symlink "$DOTFILES_DIR/git/.gitignore_global" "$HOME/.gitignore_global"
-  create_symlink "$DOTFILES_DIR/git/commit-template.txt" "$HOME/.git-commit-template.txt"
-  print_success "Git configuration installed"
+  print_success "Git configuration installed (without commit template)"
 else
   print_info "Skipping Git configuration"
 fi
@@ -378,28 +321,6 @@ fi
 # Shell Configuration
 # -----------------------------------------------------------------------------
 print_section "Shell Configuration"
-
-# Check if Fish is installed
-if command_exists fish; then
-  CURRENT_SHELL_NAME="$(basename "$SHELL")"
-  FISH_PATH="$(command -v fish)"
-
-  if [ "$CURRENT_SHELL_NAME" != "fish" ]; then
-    if confirm "Your current shell is not Fish. Do you want to change your default shell to Fish?" "n"; then
-      if chsh -s "$FISH_PATH"; then
-        print_success "Default shell changed to Fish"
-      else
-        print_error "Failed to change default shell. Try running: chsh -s $FISH_PATH"
-      fi
-    else
-      print_info "Shell not changed. You can manually switch to Fish with 'chsh -s $FISH_PATH'"
-    fi
-  else
-    print_success "Fish is already your default shell"
-  fi
-else
-  print_warning "Fish shell is not installed. Cannot set as default shell."
-fi
 
 # -----------------------------------------------------------------------------
 # Completion
