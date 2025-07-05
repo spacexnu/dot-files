@@ -144,7 +144,6 @@
 
 [commit]
     # Use custom commit template
-    template = ~/code/dot-files/git/commit-template.txt
 
 [help]
     # Automatically correct and execute mistyped commands
