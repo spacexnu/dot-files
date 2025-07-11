@@ -21,8 +21,7 @@ export LSCOLORS=GxFxCxDxBxegedabagaced
 # -----------------------------------------------------------------------------
 # Path Configuration
 # -----------------------------------------------------------------------------
-# Add Emacs and local binaries to PATH
-export PATH="$PATH:/Users/spacexnu/.config/emacs/bin:/Users/amedrado/.local/bin"
+export PATH="$PATH:/usr/local/clamav/bin:/usr/local/clamav/sbin"
 
 # -----------------------------------------------------------------------------
 # Development Tools Configuration

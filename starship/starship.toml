@@ -26,7 +26,7 @@ $time\
 [ ](fg:purple)\
 $line_break$character"""
 
-palette = 'monokai_pro_light_sun'
+palette = 'github_dark_dimmed'
 
 [os.symbols]
 Windows = "󰍲"
@@ -49,17 +49,17 @@ Debian = "󰣚"
 Redhat = "󱄛"
 RedHatEnterprise = "󱄛"
 
-[palettes.monokai_pro_light_sun]
-surface0 = "#fbf5e8"  # Fundo principal
-text = "#2c292d"      # Texto padrão
-peach = "#d8704b"     # Laranja suave
-green = "#639e3b"     # Verde suave
-teal = "#9cd1bb"      # Verde-azulado
-blue = "#3c8aa7"      # Azul suave
-purple = "#5b4fae"    # Roxo suave
-red = "#b7306c"       # Vermelho suave
-yellow = "#dbb24a"    # Amarelo suave
-mantle = "#f3ead3"    # Fundo secundário
+[palettes.github_dark_dimmed]
+surface0 = "#1c1e22"  
+text = "#c9d1d9"      
+peach = "#b8860b"     
+green = "#56d364"     
+teal = "#56b6c2"      
+blue = "#61afef"      
+purple = "#d2a8ff"    
+red = "#f85149"       
+yellow = "#e3b341"    
+mantle = "#2d3035"    
 
 [os]
 disabled = false
