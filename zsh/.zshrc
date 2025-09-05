@@ -3,6 +3,7 @@
 # =============================================================================
 export EDITOR="bbedit -w"
 export VISUAL="bbedit -w"
+export GPG_TTY=$(tty)
 
 # -----------------------------------------------------------------------------
 # Completion System Configuration

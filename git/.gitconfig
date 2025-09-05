@@ -143,6 +143,7 @@
     unwip = !git log -n 1 | grep -q -c 'WIP' && git reset HEAD~1
 
 [commit]
+	gpgsign = true
     # Use custom commit template
 
 [help]
@@ -159,3 +160,5 @@
 [user]
 	name = Adler Medrado
 	email = adler@adlermedrado.com.br
+[gpg]
+	program = gpg
