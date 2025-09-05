@@ -1,4 +1,5 @@
-### > ⚙️ **Note**: I'm currently experimenting with a new streamlined workflow. I'm simplifying my environment and reducing tool dependencies. This setup reflects an ongoing test where I'm focusing more on using IntelliJ IDEA for most development tasks and reducing reliance on terminal-based editors like Vim and Neovim. Some configurations may be deprecated or under revision during this transition.
+### > ⚙️ **Note**: I'm currently experimenting with a new streamlined workflow. 
+I'm simplifying my environment and reducing tool dependencies. This setup reflects an ongoing test where I'm focusing more on using IntelliJ IDEA for most development tasks and reducing reliance on terminal-based editors like Vim and Neovim. Some configurations may be deprecated or under revision during this transition.
 
 # Dotfiles
 
