@@ -1,5 +1,8 @@
 ### > ⚙️ **Note**: I'm currently experimenting with a new streamlined workflow. 
-I'm simplifying my environment and reducing tool dependencies. This setup reflects an ongoing test where I'm focusing more on using IntelliJ IDEA for most development tasks and reducing reliance on terminal-based editors like Vim and Neovim. Some configurations may be deprecated or under revision during this transition.
+I'm simplifying my environment and reducing tool dependencies. This setup reflects an ongoing test where I'm reducing reliance on IntelliJ due to the high cost of IntelliJ IDEA Ultimate and the AI Assistant, which is expensive and not efficient. I am testing a new stack using Neovim and Visual Studio Code combined with OpenAI Codex, and also experimenting with Gemini CLI. Fish shell remains the default choice in this streamlined workflow. 
+
+**Vim configurations are being removed and are only kept here as a glimpse of the past, since the focus moving forward will be exclusively on Neovim.**
+Some configurations may be deprecated or under revision during this transition.
 
 # Dotfiles
 
@@ -9,7 +12,7 @@ This repository contains my personal dotfiles for various tools and applications
 
 These dotfiles include configurations for:
 
-- **Shell environments**: Bash, Zsh
+- **Shell environments**: Bash, Zsh, Fish
 - **Text editors**: Vim, Neovim, Emacs
 - **Terminal multiplexers**: Tmux
 - **Terminal emulators**: iTerm2
@@ -24,6 +27,7 @@ Before installing these dotfiles, ensure you have the following dependencies ins
 
 - Git
 - Zsh (if using Zsh configurations)
+- Fish (if using Fish configurations)
 - Vim/Neovim (if using Vim/Neovim configurations)
 - Emacs (if using Emacs configurations)
 - Tmux (if using Tmux configurations)
@@ -88,6 +92,14 @@ The Starship configuration includes:
 - Custom prompt styling
 - Git integration
 - Command execution time display
+
+### Fish Configuration
+
+The Fish configuration includes:
+- PATH management
+- Integration with Starship and zoxide
+- Custom aliases
+- Custom greeting (cos_intro)
 
 ## Customization
 
