@@ -1,6 +1,6 @@
-# Constant for banner header
-set COS_BANNER "CENTRAL OPERATING SYSTEM - COS"
-set COS_DIVIDER "──────────────────────────────"
+# Banner
+set -g COS_BANNER "CENTRAL OPERATING SYSTEM - COS"
+set -g COS_DIVIDER "──────────────────────────────"
 
 function cos_quote
     set quotes \
@@ -25,69 +25,58 @@ function cos_quote
         "We used to fear the end. Now we simulate it in loops." \
         "If the Matrix had a /tmp folder, you'd be in it." \
         "Trust no certificate that wasn't self-signed with blood." \
-        "Between `init` and `shutdown`, we are nothing but processes." \
+        "Between init and shutdown, we are nothing but processes." \
         "Some escape into the cloud. Others into silence." \
         "Truth is compressed. Lies are verbose." \
         "Enlightenment is just another unauthorized access." \
         "In the beginning was the command line — and it was good."
-    set rand (random 1 (count $quotes))
+    set -l rand (random 1 (count $quotes))
     echo $quotes[$rand]
 end
 
-function get_user_name
-    echo (whoami)
-end
+function _cos_user; whoami; end
+function _cos_host; hostname; end
+function _cos_kernel; uname -r; end
+function _cos_uptime; uptime | cut -d ',' -f1; end
 
-function get_host_name
-    echo (hostname)
-end
-
-function get_kernel_version
-    echo (uname -r)
-end
-
-function get_uptime
-    echo (uptime | cut -d ',' -f1)
-end
-
-function get_ip_address
+function _cos_ip
     switch (uname)
         case Darwin
-            echo (ipconfig getifaddr en0 2>/dev/null || echo 'no ip')
+            ipconfig getifaddr en0 ^/dev/null; or echo 'no ip'
         case Linux
-            set ip (hostname -I | awk '{print $1}' 2>/dev/null)
-            if test -z "$ip"
-                echo 'no ip'
-            else
-                echo $ip
-            end
+            set -l ip (hostname -I | awk '{print $1}' 2>/dev/null)
+            test -n "$ip"; and echo $ip; or echo 'no ip'
         case '*'
             echo unknown
     end
 end
 
 function cos_intro
-    set user_name (get_user_name)
-    set host_name (get_host_name)
-    set kernel_version (get_kernel_version)
-    set uptime_read (get_uptime)
-    set ip (get_ip_address)
-    set quote (cos_quote)
+    set -l user (_cos_user)
+    set -l host (_cos_host)
+    set -l kernel (_cos_kernel)
+    set -l up (_cos_uptime)
+    set -l ip (_cos_ip)
+    set -l q (cos_quote)
 
-    echo ""
+    echo
     echo $COS_BANNER
     echo $COS_DIVIDER
-    echo "  Operator    : $user_name"
-    echo "  Uptime      : $uptime_read"
-    echo "  Hostname    : $host_name"
+    echo "  Operator    : $user"
+    echo "  Uptime      : $up"
+    echo "  Hostname    : $host"
     echo "  IP Address  : $ip"
-    echo "  Kernel      : $kernel_version"
+    echo "  Kernel      : $kernel"
     echo $COS_DIVIDER
-    echo "  $quote"
-    echo ""
+    echo "  $q"
+    echo
+
+    # If lolcat is installed, colorize; otherwise, just output (optional)
+    # command -q lolcat; and commandline -f repaint
 end
 
+# Show the banner only in interactive shell (fish already calls fish_greeting)
 if status is-interactive
-    # cos_intro | lolcat
-    cos_intro
+    # Define fish_greeting as cos_intro if it isn't already
+    functions -q fish_greeting; or functions -c cos_intro fish_greeting
 end

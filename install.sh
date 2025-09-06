@@ -21,17 +21,27 @@ YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
- # Get the directory where the script is located
-DOTFILES_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+ # Get the directory where the script is located (bash/zsh/sh compatible)
+SCRIPT_SOURCE="${BASH_SOURCE[0]:-$0}"
+DOTFILES_DIR="$( cd "$( dirname "$SCRIPT_SOURCE" )" >/dev/null 2>&1 && pwd -P )"
 
 # Redirect all output to a log file as well as the terminal
 exec > >(tee -a "$HOME/dotfiles-install.log") 2>&1
 
 # Handle auto-confirm flag
 AUTO_CONFIRM=false
-if [[ "${1:-}" == "--yes" ]]; then
-  AUTO_CONFIRM=true
-fi
+NVIM_ONLY=false
+# Parse args for auto-confirm and scoped install flags
+for arg in "$@"; do
+  case "$arg" in
+    -y|--yes)
+      AUTO_CONFIRM=true
+      ;;
+    --nvim-only)
+      NVIM_ONLY=true
+      ;;
+  esac
+done
 
 # -----------------------------------------------------------------------------
 # Helper Functions
@@ -101,7 +111,7 @@ create_symlink() {
 
   # Create the symlink
   print_info "Creating symlink from $source_file to $target_file"
-  ln -sf "$source_file" "$target_file"
+  ln -sfn "$source_file" "$target_file"
 
   # Check if symlink was created successfully
   if [ $? -eq 0 ]; then
@@ -112,6 +122,36 @@ create_symlink() {
     return 1
   fi
 }
+
+# Install only Neovim configuration
+install_nvim_config() {
+  mkdir -p "$HOME/.config"
+  print_info "Using DOTFILES_DIR=$DOTFILES_DIR"
+  if [ -d "$DOTFILES_DIR/nvim" ]; then
+    create_symlink "$DOTFILES_DIR/nvim" "$HOME/.config/nvim"
+    if [ -L "$HOME/.config/nvim" ]; then
+      local target
+      target="$(readlink "$HOME/.config/nvim" || true)"
+      print_success "Neovim configuration installed"
+      if [ -n "$target" ]; then
+        print_info "~/.config/nvim -> $target"
+      fi
+    else
+      print_warning "~/.config/nvim was not created as a symlink. Check permissions."
+    fi
+    print_info "Open Neovim and run :Lazy then :Mason to install plugins and tools."
+  else
+    print_error "Neovim configuration directory not found at $DOTFILES_DIR/nvim"
+    return 1
+  fi
+}
+
+# Fast path: only install Neovim config and exit
+if $NVIM_ONLY; then
+  print_section "Neovim Configuration"
+  install_nvim_config
+  exit $?
+fi
 
 # Check if a command exists
 command_exists() {
@@ -184,7 +224,7 @@ fi
 print_section "Installing Dependencies"
 
 # List of dependencies to install
-DEPENDENCIES=(fzf tmux lolcat fortune starship)
+DEPENDENCIES=(fzf tmux lolcat fortune starship fish zoxide eza ripgrep fd bat)
 
 install_dependencies() {
   case $OS in
@@ -243,10 +283,48 @@ if confirm "Do you want to install Nerd Fonts?" "n"; then
   esac
 fi
 
+
 if confirm "Do you want to install dependencies?" "n"; then
   install_dependencies || { print_error "Dependency installation failed"; exit 1; }
 else
   print_info "Skipping dependency installation"
+fi
+
+# -----------------------------------------------------------------------------
+# Explicit Fish Installation (in case dependencies were skipped or fish missing)
+# -----------------------------------------------------------------------------
+if ! command_exists fish; then
+  if confirm "Fish is not installed. Do you want to install Fish now?" "y"; then
+    case $OS in
+      macos)
+        if ! command_exists brew; then
+          print_info "Installing Homebrew..."
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        fi
+        print_info "Installing Fish via Homebrew..."
+        brew install fish && print_success "Fish installed" || print_error "Failed to install Fish"
+        ;;
+      debian)
+        print_info "Installing Fish via apt..."
+        sudo apt update && sudo apt install -y fish && print_success "Fish installed" || print_error "Failed to install Fish"
+        ;;
+      redhat)
+        print_info "Installing Fish via dnf/yum..."
+        if command_exists dnf; then
+          sudo dnf install -y fish && print_success "Fish installed" || print_error "Failed to install Fish"
+        else
+          sudo yum install -y fish && print_success "Fish installed" || print_error "Failed to install Fish"
+        fi
+        ;;
+      *)
+        print_warning "Automatic Fish installation not supported on this OS."
+        ;;
+    esac
+  else
+    print_info "Skipping Fish installation"
+  fi
+else
+  print_info "Fish already installed at $(command -v fish)"
 fi
 
 # -----------------------------------------------------------------------------
@@ -280,6 +358,25 @@ else
   print_info "Skipping Zsh configuration"
 fi
 
+# Fish shell configuration
+if confirm "Do you want to install Fish shell configuration?" "y"; then
+  mkdir -p "$HOME/.config/fish"
+  if create_symlink "$DOTFILES_DIR/fish/config.fish" "$HOME/.config/fish/config.fish"; then
+    print_success "Fish config.fish installed"
+  else
+    print_error "Failed to install Fish config.fish"
+  fi
+  if [ -f "$DOTFILES_DIR/fish/cos_intro.fish" ]; then
+    if create_symlink "$DOTFILES_DIR/fish/cos_intro.fish" "$HOME/.config/fish/cos_intro.fish"; then
+      print_success "Fish cos_intro.fish installed"
+    else
+      print_error "Failed to install Fish cos_intro.fish"
+    fi
+  fi
+else
+  print_info "Skipping Fish configuration"
+fi
+
 
 # Tmux configuration
 if confirm "Do you want to install Tmux configuration?" "y"; then
@@ -311,6 +408,20 @@ else
   print_info "Skipping Starship configuration"
 fi
 
+# Neovim configuration
+if confirm "Do you want to install Neovim configuration?" "y"; then
+  mkdir -p "$HOME/.config"
+  if [ -d "$DOTFILES_DIR/nvim" ]; then
+    create_symlink "$DOTFILES_DIR/nvim" "$HOME/.config/nvim"
+    print_success "Neovim configuration installed"
+    print_info "Open Neovim and run :Lazy then :Mason to install plugins and tools."
+  else
+    print_error "Neovim configuration directory not found at $DOTFILES_DIR/nvim"
+  fi
+else
+  print_info "Skipping Neovim configuration"
+fi
+
 # iTerm2 (macOS only)
 if [ "$OS" == "macos" ]; then
   print_info "iTerm2 configurations need to be imported manually from:"
@@ -321,6 +432,24 @@ fi
 # Shell Configuration
 # -----------------------------------------------------------------------------
 print_section "Shell Configuration"
+
+if [ "$OS" == "macos" ]; then
+  if confirm "Do you want to change your default shell to Fish?" "n"; then
+    if command_exists dscl; then
+      FISH_PATH="$(command -v fish)"
+      if [ -n "$FISH_PATH" ]; then
+        print_info "Changing default shell to Fish ($FISH_PATH) using dscl..."
+        sudo dscl . -create /Users/"$USER" UserShell "$FISH_PATH" && print_success "Default shell changed to Fish" || print_error "Failed to change default shell"
+      else
+        print_error "Fish shell not found in PATH"
+      fi
+    else
+      print_error "dscl command not found. Cannot change shell."
+    fi
+  else
+    print_info "Skipping default shell change"
+  fi
+fi
 
 # -----------------------------------------------------------------------------
 # Completion

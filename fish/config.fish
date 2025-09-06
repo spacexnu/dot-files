@@ -1,51 +1,67 @@
-# Set path 
-set -U fish_user_paths ~/.zfunc $fish_user_paths
-set -U fish_user_paths /opt/homebrew/bin $fish_user_paths
-set -U fish_user_paths /opt/homebrew/sbin $fish_user_paths
-set -U fish_user_paths /Users/spacexnu/.config/emacs/bin $fish_user_paths
-set -U fish_user_paths /Users/spacexnu/.local/bin $fish_user_paths
-set -U fish_user_paths /usr/local/opt/mysql-client/bin $fish_user_paths
-set -U fish_user_paths '/Applications/IntelliJ IDEA.app/Contents/MacOS' $fish_user_paths
-
-set -gx GPG_TTY (tty)
-
-# Enable colors on ls command
-set -x CLICOLOR 1
-# set -x LSCOLORS GxFxCxDxBxegedabagaced
-
-# Check and load fzf if it is available and compatible
-if type -q fzf && fzf --version >/dev/null 2>&1
-    if status is-interactive
-        if test -f ~/.fzf/shell/key-bindings.fish
-            source ~/.fzf/shell/key-bindings.fish
-        end
-        if test -f ~/.fzf/shell/completion.fish
-            source ~/.fzf/shell/completion.fish
-        end
-    end
+if type -q starship
+    starship init fish | source
 end
 
-# Aliases
-alias brewupd "brew update; and brew upgrade; and brew cleanup"
-alias tn "tmux new-session -s "
-alias tat "tmux attach -t "
-alias tls "tmux ls"
-alias ls "ls -G"
-alias vim nvim
-alias ll "ls -latr --color=auto"
-alias ss "nvim (fzf -m --preview='bat --color=always {}')"
+if type -q zoxide
+    eval (zoxide init fish)
+end
 
-test -e {$HOME}/.iterm2_shell_integration.fish; and source {$HOME}/.iterm2_shell_integration.fish
+if test -x /opt/homebrew/bin/brew
+    eval (/opt/homebrew/bin/brew shellenv)
+end
 
+fish_add_path ~/.zfunc
+fish_add_path /opt/homebrew/bin
+fish_add_path /opt/homebrew/sbin
+fish_add_path ~/.config/emacs/bin
+fish_add_path ~/.local/bin
+fish_add_path /usr/local/opt/mysql-client/bin
+fish_add_path "/Applications/IntelliJ IDEA.app/Contents/MacOS"
+fish_add_path ~/.lmstudio/bin
+
+if type -q eza
+    alias ls 'eza'
+    alias ll 'eza -lah --group-directories-first --git'
+else
+    # ls color on BSD/macOS
+    set -gx CLICOLOR 1
+    alias ls 'ls -G'
+    # macOS BSD ls: -l (long) -a (all) -h (human) -t (mtime) -r (reverse) -G (color)
+    alias ll 'ls -lahtrG'
+end
+
+# GPG on terminal
+set -gx GPG_TTY (tty)
+
+# iTerm2 integration
+test -e $HOME/.iterm2_shell_integration.fish; and source $HOME/.iterm2_shell_integration.fish
+
+# Editor
 set -gx EDITOR nvim
 set -gx GIT_EDITOR nvim
 
-# cat ~/.config/fish/cos_intro.txt
-source ~/.config/fish/cos_intro.fish
+# Aliases
+alias brewupd 'brew update; and brew upgrade; and brew cleanup'
+alias tn 'tmux new-session -s '
+alias tat 'tmux attach -t '
+alias tls 'tmux ls'
+# fzf + bat (if installed)
+alias ss 'nvim (fzf -m --preview="bat --color=always {}")'
 
-# Added by OrbStack: command-line tools and integration
-# This won't be added again if you remove it.
-source ~/.orbstack/shell/init2.fish 2>/dev/null || :
+# FZF integrations (if fzf is installed via homebrew and scripts are installed)
+if type -q fzf
+    if status is-interactive
+        test -f ~/.fzf/shell/key-bindings.fish; and source ~/.fzf/shell/key-bindings.fish
+        test -f ~/.fzf/shell/completion.fish;   and source ~/.fzf/shell/completion.fish
+    end
+end
 
-# Added by LM Studio CLI (lms)
-set -gx PATH $PATH /Users/spacexnu/.lmstudio/bin
+# OrbStack
+source ~/.orbstack/shell/init2.fish 2>/dev/null || true
+
+# Greeting
+functions -q fish_greeting; and functions -e fish_greeting
+functions -c cos_intro fish_greeting 2>/dev/null; or source ~/.config/fish/cos_intro.fish
+
+# Optional: vi mode
+# fish_vi_key_bindings
