@@ -1,6 +1,5 @@
 return {
   "linux-cultist/venv-selector.nvim",
-  branch = "regexp",
   opts = {
     search_venv_managers = true,
     parents = 3,
