@@ -26,7 +26,7 @@ $time\
 [ ](fg:purple)\
 $line_break$character"""
 
-palette = 'monokai_pro_light_sun'
+palette = 'catppuccin_latte'
 
 [os.symbols]
 Windows = "󰍲"
@@ -49,17 +49,18 @@ Debian = "󰣚"
 Redhat = "󱄛"
 RedHatEnterprise = "󱄛"
 
-[palettes.monokai_pro_light_sun]
-surface0 = "#fbf5e8"
-text = "#2c292d"
-peach = "#d8704b"
-green = "#639e3b"
-teal = "#9cd1bb"
-blue = "#3c8aa7"
-purple = "#5b4fae"
-red = "#b7306c"
-yellow = "#dbb24a"
-mantle = "#f3ead3"
+[palettes.catppuccin_latte]
+# Catppuccin Latte palette
+surface0 = "#ccd0da"
+text     = "#4c4f69"
+peach    = "#fe640b"
+green    = "#40a02b"
+teal     = "#179299"
+blue     = "#1e66f5"
+purple   = "#7287fd"  # lavender
+red      = "#d20f39"
+yellow   = "#df8e1d"
+mantle   = "#e6e9ef"
 
 [os]
 disabled = false

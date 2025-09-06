@@ -14,10 +14,20 @@ return {
         config = function()
             require("lualine").setup({
                 options = {
-                    theme = "nightfly",
-                    component_separators = { left = "", right = "" },
-                    section_separators = { left = "", right = "" },
+                    -- Match current colorscheme automatically (works with monokai-pro-light)
+                    theme = "auto",
+                    -- Minimal separators suit light themes better
+                    component_separators = { left = "", right = "" },
+                    section_separators   = { left = "", right = "" },
                     globalstatus = true,
+                },
+                sections = {
+                    lualine_a = { { "mode", icon = "" } },
+                    lualine_b = { "branch", "diff" },
+                    lualine_c = { { "filename", path = 1 } },
+                    lualine_x = { "diagnostics", "encoding", "fileformat", "filetype" },
+                    lualine_y = { "progress" },
+                    lualine_z = { "location" },
                 },
             })
         end,
