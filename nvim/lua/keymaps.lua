@@ -46,3 +46,15 @@ map("n", "N", "Nzzzv", opts)
 
 -- Clear search highlights
 map("n", "<Esc>", ":nohlsearch<CR>", opts)
+
+-- Theme toggle: light (Latte) <-> dark (Frappe)
+map("n", "<leader>ut", function()
+  if vim.o.background == "dark" then
+    vim.o.background = "light"
+    vim.cmd("colorscheme catppuccin-latte")
+  else
+    vim.o.background = "dark"
+    vim.cmd("colorscheme catppuccin-frappe")
+  end
+  -- ColorScheme autocmd will re-apply UI tweaks
+end, { desc = "Toggle theme (light/dark)", noremap = true, silent = true })
