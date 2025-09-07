@@ -47,6 +47,7 @@ alias tat 'tmux attach -t '
 alias tls 'tmux ls'
 # fzf + bat (if installed)
 alias ss 'nvim (fzf -m --preview="bat --color=always {}")'
+alias vim=nvim
 
 # FZF integrations (if fzf is installed via homebrew and scripts are installed)
 if type -q fzf
