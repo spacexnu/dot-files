@@ -1,48 +1,31 @@
 keybinds {
-  // normal = somente no modo normal do Zellij
-  // Navegação vim-like com hjkl em modo normal
   normal {
-    bind "h" { MoveFocus "Left"; }
-    bind "j" { MoveFocus "Down"; }
-    bind "k" { MoveFocus "Up"; }
-    bind "l" { MoveFocus "Right"; }
+    unbind "h"
+    unbind "j"
+    unbind "k"
+    unbind "l"
   }
 
-  // shared = vale em todos os modos (normal, pane, tmux, scroll...)
   shared {
-    // desarma qualquer bind prévio que esteja segurando Alt+f / Alt+b
     unbind "Alt f"
     unbind "Alt b"
-    // desarma qualquer bind prévio que esteja segurando Alt+h/j/k/l
     unbind "Alt h"
     unbind "Alt j"
     unbind "Alt k"
     unbind "Alt l"
 
-    // Esc+f e Esc+b (enviados pelo iTerm2 como Alt) viram Alt f / Alt b
-    bind "Alt b"     { MoveFocus "Left"; }
-    bind "Alt f"     { MoveFocus "Right"; }
-    // Navegação vim-like entre panes com Alt+h/j/k/l
-    bind "Alt h"     { MoveFocus "Left"; }
-    bind "Alt j"     { MoveFocus "Down"; }
-    bind "Alt k"     { MoveFocus "Up"; }
-    bind "Alt l"     { MoveFocus "Right"; }
+    unbind "Ctrl l"
 
-    // Fallback universal: Ctrl+h/j/k/l (dispensa Alt/Option do terminal)
-    bind "Ctrl h"    { MoveFocus "Left"; }
-    bind "Ctrl j"    { MoveFocus "Down"; }
-    bind "Ctrl k"    { MoveFocus "Up"; }
-    bind "Ctrl l"    { MoveFocus "Right"; }
+    bind "Ctrl Left"  { MoveFocus "Left"; }
+    bind "Ctrl Down"  { MoveFocus "Down"; }
+    bind "Ctrl Up"    { MoveFocus "Up"; }
+    bind "Ctrl Right" { MoveFocus "Right"; }
 
-    // Fallbacks úteis (dependem do terminal/layout)
-    bind "Alt Left"  { MoveFocus "Left"; }
-    bind "Alt Right" { MoveFocus "Right"; }
-
-    // Se seu layout transformar Alt+L em '¬', mantenha também:
-    // bind "Alt ¬" { MoveFocus "Right"; }
+    bind "Ctrl h"     { MoveFocus "Left"; }
+    bind "Ctrl j"     { MoveFocus "Down"; }
+    bind "Ctrl k"     { MoveFocus "Up"; }
   }
 }
 
 default_mode "normal"
-// Tema Catppuccin Frappe (requer ~/.config/zellij/themes/catppuccin-frappe.kdl)
 theme "catppuccin-frappe"
