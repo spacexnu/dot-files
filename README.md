@@ -14,7 +14,7 @@ These dotfiles include configurations for:
 
 - **Shell environments**: Bash, Zsh, Fish
 - **Text editors**: Vim, Neovim, Emacs
-- **Terminal multiplexers**: Tmux
+- **Terminal multiplexers**: Tmux, Zellij
 - **Terminal emulators**: iTerm2
 - **IDE integrations**: IdeaVim
 - **Shell prompts**: Starship
@@ -85,6 +85,20 @@ The Tmux configuration includes:
 - Custom key bindings
 - Status bar customization
 - Session management
+
+### Zellij Configuration
+
+The Zellij configuration includes:
+- Defaults preserved with a custom theme
+- Theme set to `catppuccin-frappe`
+
+To enable the Catppuccin themes (used by the config), install the theme files:
+
+```bash
+git clone https://github.com/catppuccin/zellij ~/.config/zellij/themes
+```
+
+The install script also performs this step (and updates it if already present).
 
 ### Starship Configuration
 

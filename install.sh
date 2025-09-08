@@ -224,7 +224,7 @@ fi
 print_section "Installing Dependencies"
 
 # List of dependencies to install
-DEPENDENCIES=(fzf tmux lolcat fortune starship fish zoxide eza ripgrep fd bat)
+DEPENDENCIES=(fzf tmux zellij lolcat fortune starship fish zoxide eza ripgrep fd bat)
 
 install_dependencies() {
   case $OS in
@@ -388,6 +388,53 @@ if confirm "Do you want to install Tmux configuration?" "y"; then
   fi
 else
   print_info "Skipping Tmux configuration"
+fi
+
+# Zellij configuration
+if confirm "Do you want to install Zellij configuration?" "y"; then
+  mkdir -p "$HOME/.config/zellij"
+  if [ -f "$DOTFILES_DIR/zellij/config.kdl" ]; then
+    create_symlink "$DOTFILES_DIR/zellij/config.kdl" "$HOME/.config/zellij/config.kdl"
+    print_success "Zellij configuration installed"
+    print_info "Theme set to catppuccin-frappe (all other defaults)."
+    # Install Catppuccin themes for Zellij
+    if command_exists git; then
+      if [ ! -d "$HOME/.config/zellij/themes" ]; then
+        print_info "Cloning Catppuccin Zellij themes..."
+        git clone https://github.com/catppuccin/zellij "$HOME/.config/zellij/themes" && \
+          print_success "Catppuccin themes cloned to ~/.config/zellij/themes" || \
+          print_warning "Failed to clone Catppuccin themes"
+      else
+        if [ -d "$HOME/.config/zellij/themes/.git" ]; then
+          print_info "Updating Catppuccin Zellij themes..."
+          git -C "$HOME/.config/zellij/themes" pull --ff-only && \
+            print_success "Catppuccin themes updated" || \
+            print_warning "Failed to update Catppuccin themes"
+        else
+          print_info "Themes directory already exists at ~/.config/zellij/themes"
+        fi
+      fi
+
+      # If the repository contains a nested themes directory, expose .kdl files at top-level
+      if [ -d "$HOME/.config/zellij/themes/themes" ]; then
+        for kdl in "$HOME/.config/zellij/themes/themes"/*.kdl; do
+          [ -e "$kdl" ] || continue
+          base_name="$(basename "$kdl")"
+          target_kdl="$HOME/.config/zellij/themes/$base_name"
+          if [ ! -e "$target_kdl" ]; then
+            ln -sfn "$kdl" "$target_kdl"
+          fi
+        done
+        print_info "Ensured Catppuccin .kdl files are available in ~/.config/zellij/themes"
+      fi
+    else
+      print_warning "Git not found. Skipping Catppuccin themes installation."
+    fi
+  else
+    print_error "Zellij configuration file not found"
+  fi
+else
+  print_info "Skipping Zellij configuration"
 fi
 
 # Git configuration
