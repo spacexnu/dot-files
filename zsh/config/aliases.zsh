@@ -23,10 +23,17 @@ alias tls="tmux ls"
 # -----------------------------------------------------------------------------
 # File Management Aliases
 # -----------------------------------------------------------------------------
-# Colorized output for ls
-alias ls='ls --color=auto'
-# Long listing with details
-alias ll='ls -latr --color=auto'
+# Prefer eza if available; otherwise, use macOS BSD ls with colors
+if command -v eza >/dev/null 2>&1; then
+  alias ls='eza'
+  alias ll='eza -lah --group-directories-first --git'
+else
+  # Ensure colored output on macOS/BSD ls
+  export CLICOLOR=${CLICOLOR:-1}
+  alias ls='ls -G'
+  # macOS BSD ls: -l (long) -a (all) -h (human) -t (mtime) -r (reverse) -G (color)
+  alias ll='ls -lahtrG'
+fi
 
 # -----------------------------------------------------------------------------
 # Editor Aliases

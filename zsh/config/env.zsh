@@ -10,13 +10,7 @@
 # Set the path to the Starship configuration file
 export STARSHIP_CONFIG=~/code/dot-files/starship/starship.toml
 
-# -----------------------------------------------------------------------------
-# Terminal Colors Configuration
-# -----------------------------------------------------------------------------
-# Enable colorized output for ls and other commands
-export CLICOLOR=1
-# Define colors for different file types in ls output
-export LSCOLORS=GxFxCxDxBxegedabagaced
+# (Colors for ls are set conditionally in aliases fallback when eza is absent)
 
 # -----------------------------------------------------------------------------
 # Path Configuration
