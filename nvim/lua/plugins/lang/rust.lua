@@ -15,7 +15,7 @@ dap.configurations.rust = {
     type = "codelldb",
     request = "launch",
     program = function()
-      -- você pode mudar isso se usar cargo run --bin etc
+      -- you can change this if you use cargo run --bin etc
       return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/target/debug/", "file")
     end,
     cwd = "${workspaceFolder}",
