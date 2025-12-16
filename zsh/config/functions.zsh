@@ -62,3 +62,57 @@ sysinfo() {
   echo "Shell: $SHELL"
   echo "Terminal: $TERM"
 }
+
+# -----------------------------------------------------------------------------
+# Homebrew "source-first" helper commands
+# -----------------------------------------------------------------------------
+
+# Install formula from source (no bottle)
+brewi() {
+  if [[ -z "$1" ]]; then
+    echo "usage: brewi <formula> [extra brew args]" >&2
+    return 2
+  fi
+  brew install --build-from-source "$@"
+}
+
+# Reinstall formula from source
+brewr() {
+  if [[ -z "$1" ]]; then
+    echo "usage: brewr <formula> [extra brew args]" >&2
+    return 2
+  fi
+  brew reinstall --build-from-source "$@"
+}
+
+# Upgrade everything from source
+brewu() {
+  brew upgrade --build-from-source "$@"
+}
+
+# Upgrade only the outdated formulas, one-by-one, from source (more explicit logs)
+brewupd() {
+  # Update metadata first
+  brew update || return $?
+
+  # List outdated formulae (ignore casks here)
+  local pkgs
+  pkgs=($(brew outdated --formula --quiet))
+
+  if (( ${#pkgs[@]} == 0 )); then
+    echo "No outdated formulae."
+    return 0
+  fi
+
+  echo "Upgrading from source (${#pkgs[@]}): ${pkgs[*]}"
+  local p
+  for p in "${pkgs[@]}"; do
+    echo "==> brew upgrade --build-from-source $p"
+    brew upgrade --build-from-source "$p" || return $?
+  done
+}
+
+# Optional: show which formulae are outdated
+brewout() {
+  brew outdated --formula
+}
