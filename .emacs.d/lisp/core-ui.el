@@ -8,7 +8,7 @@
 (set-face-attribute 'default nil :font "FiraCode Nerd Font" :height 130)
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
-;; macOS: Command = Meta (se você curte)
+;; macOS: Command = Meta (if you like it)
 (setq mac-command-modifier 'meta
       mac-option-modifier 'none)
 

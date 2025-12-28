@@ -1,11 +1,11 @@
 ;;; core-editor.el --- editor behavior -*- lexical-binding: t; -*-
 
-;; Indent/whitespace: padrão “sem sujeira”
+;; Indent/whitespace: clean default
 (setq-default indent-tabs-mode nil
               tab-width 4)
 (add-hook 'before-save-hook #'delete-trailing-whitespace)
 
-;; Melhor scroll
+;; Smoother scrolling
 (setq scroll-conservatively 101
       scroll-margin 5)
 
@@ -13,11 +13,14 @@
 (use-package project
   :ensure nil)
 
-;; Eglot (built-in no Emacs 29+)
+;; Line numbers only in code buffers.
+(add-hook 'prog-mode-hook #'display-line-numbers-mode)
+
+;; Eglot (built-in in Emacs 29+)
 (use-package eglot
   :ensure nil
   :init
-  ;; logs do eglot: deixe baixo
+  ;; eglot logs: keep low
   (setq eglot-events-buffer-size 0))
 
 ;; Toggle global: format-on-save

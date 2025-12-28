@@ -8,7 +8,7 @@
         org-log-done 'time
         org-hide-emphasis-markers t)
 
-  ;; Captura rápida
+  ;; Quick capture
   (setq org-capture-templates
         '(("t" "Todo" entry
            (file+headline org-default-notes-file "Inbox")
@@ -20,13 +20,13 @@
 (global-set-key (kbd "C-c o c") #'org-capture)
 (global-set-key (kbd "C-c o a") #'org-agenda)
 
-;; Export básico pra HTML
+;; Basic HTML export
 (setq org-html-validation-link nil
       org-export-with-toc t
       org-export-with-section-numbers nil)
 
-;; Trilho simples de publish (quando você decidir “converter o site”)
-;; Ajuste paths quando usar.
+;; Simple publish pipeline (when you decide to "convert the site")
+;; Adjust paths when you use it.
 (setq org-publish-project-alist
       '(("spacexnu-site"
          :base-directory "~/site-org/"

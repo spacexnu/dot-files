@@ -14,7 +14,7 @@
 
 (use-package consult)
 
-;; (Opcional, mas excelente) ações contextuais
+;; (Optional, but excellent) contextual actions
 (use-package embark
   :bind (("C-." . embark-act))
   :init

@@ -10,7 +10,7 @@
 (defun spacexnu/prettier-format-buffer ()
   (interactive)
   (when (and spacexnu/format-on-save (buffer-file-name) (executable-find "prettier"))
-    ;; prettier altera arquivo; então rodamos e recarregamos
+    ;; prettier modifies the file; run it then reload
     (call-process "prettier" nil "*spacexnu-format*" nil "--write" (buffer-file-name))
     (revert-buffer t t t)))
 
