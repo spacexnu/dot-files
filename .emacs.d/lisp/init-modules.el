@@ -2,7 +2,9 @@
 
 (require 'core-ui)
 (require 'core-editor)
+(require 'core-treesit)
 (require 'core-completion)
+(require 'core-debug)
 (require 'core-git)
 (require 'core-org)
 (require 'db-sql)
