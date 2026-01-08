@@ -1,184 +1,69 @@
 return {
-	{
-		"neovim/nvim-lspconfig",
-		dependencies = {
-			{ "mason-org/mason.nvim", config = true },
-			{
-				"mason-org/mason-lspconfig.nvim",
-				-- by default it already enables the installed servers (can disable with automatic_enable=false)
-				opts = {
-					ensure_installed = {
-						-- Python
-						"pyright",
-						-- Go
-						"gopls",
-						-- Web / JS / TS / HTML
-						"vtsls",
-						"html",
-						-- Markdown
-						"marksman",
-					},
-					automatic_enable = true,
-				},
-			},
-			"hrsh7th/cmp-nvim-lsp",
-		},
+  -- Keep nvim-lspconfig installed: it provides server config data (lsp/*).
+  { "neovim/nvim-lspconfig" },
 
-		config = function()
-			---------------------------------------------------------------------------
-			-- Capabilities (nvim-cmp)
-			---------------------------------------------------------------------------
-			local capabilities = vim.lsp.protocol.make_client_capabilities()
-			local ok_cmp, cmp_lsp = pcall(require, "cmp_nvim_lsp")
-			if ok_cmp then
-				capabilities = cmp_lsp.default_capabilities(capabilities)
-			end
+  -- Install LSP servers
+  { "williamboman/mason.nvim", config = true },
 
-			---------------------------------------------------------------------------
-			-- on_attach: keymaps, inlay hints, format-on-save (with conform when available)
-			---------------------------------------------------------------------------
-			local on_attach = function(client, bufnr)
-				local map = function(mode, lhs, rhs, desc)
-					vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, noremap = true, silent = true, desc = desc })
-				end
-				map("n", "K", vim.lsp.buf.hover, "LSP Hover")
-				map("n", "<leader>rn", vim.lsp.buf.rename, "LSP Rename")
-				map("n", "<leader>ca", vim.lsp.buf.code_action, "LSP Code Action")
+  {
+    "williamboman/mason-lspconfig.nvim",
+    dependencies = {
+      "williamboman/mason.nvim",
+      "hrsh7th/cmp-nvim-lsp",
+      "neovim/nvim-lspconfig",
+    },
+    opts = {
+      ensure_installed = {
+        "pyright",
+        "tsserver", -- Mason package name (keep this)
+        "gopls",
+        "clangd",
+        "bashls",
+        "marksman",
+      },
+    },
+    config = function(_, opts)
+      require("mason-lspconfig").setup(opts)
 
-				-- Inlay hints (compat 0.9/0.10/0.11)
-				if client.server_capabilities and client.server_capabilities.inlayHintProvider then
-					local ih = vim.lsp.inlay_hint
-					pcall(function()
-						if type(ih) == "table" and ih.enable then
-							ih.enable(true, { bufnr = bufnr })
-						else
-							ih(bufnr, true)
-						end
-					end)
-				end
+      -- Capabilities for nvim-cmp
+      local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
-				-- Format on save (delegates to conform if present)
-				if client.supports_method and client.supports_method("textDocument/formatting") then
-					local group = vim.api.nvim_create_augroup("LspFormatOnSave", { clear = false })
-					vim.api.nvim_clear_autocmds({ group = group, buffer = bufnr })
-					vim.api.nvim_create_autocmd("BufWritePre", {
-						group = group,
-						buffer = bufnr,
-						callback = function()
-							local ok_conform, conform = pcall(require, "conform")
-							if ok_conform then
-								conform.format({ bufnr = bufnr, lsp_fallback = true, quiet = true })
-							else
-								vim.lsp.buf.format({ async = false })
-							end
-						end,
-					})
-				end
-			end
+      -- Keymaps on attach (new recommended style)
+      vim.api.nvim_create_autocmd("LspAttach", {
+        callback = function(ev)
+          local buf = ev.buf
+          local map = function(mode, lhs, rhs, desc)
+            vim.keymap.set(mode, lhs, rhs, { buffer = buf, desc = desc })
+          end
+          map("n", "gd", vim.lsp.buf.definition, "Go to definition")
+          map("n", "gr", vim.lsp.buf.references, "References")
+          map("n", "K",  vim.lsp.buf.hover, "Hover")
+          map("n", "<leader>rn", vim.lsp.buf.rename, "Rename")
+          map("n", "<leader>ca", vim.lsp.buf.code_action, "Code action")
+        end,
+      })
 
-			---------------------------------------------------------------------------
-			-- Per-server definitions (now via vim.lsp.config)
-			-- Note: mason-lspconfig installs the binaries and, by default, calls vim.lsp.enable()
-			---------------------------------------------------------------------------
-			local function with_common(opts)
-				opts = opts or {}
-				opts.capabilities = capabilities
-				opts.on_attach = on_attach
-				return opts
-			end
+      -- Configure servers using the new API (NO require('lspconfig') framework)
+      vim.lsp.config("pyright",   { capabilities = capabilities })
+      vim.lsp.config("gopls",     { capabilities = capabilities })
+      vim.lsp.config("clangd",    { capabilities = capabilities })
+      vim.lsp.config("bashls",    { capabilities = capabilities })
+      vim.lsp.config("marksman",  { capabilities = capabilities })
 
-			-- Python
-			vim.lsp.config(
-				"pyright",
-				with_common({
-					-- settings = { python = { analysis = { typeCheckingMode = "basic" } } },
-				})
-			)
+      -- TypeScript/JavaScript:
+      -- lspconfig renamed "tsserver" -> "ts_ls" (config name).
+      -- Mason still installs it as tsserver. Enable ts_ls here.
+      vim.lsp.config("ts_ls",     { capabilities = capabilities })
 
-			-- Go
-			vim.lsp.config(
-				"gopls",
-				with_common({
-					settings = {
-						gopls = {
-							gofumpt = true,
-							analyses = { unreachable = true, nilness = true, unusedparams = true, shadow = true },
-							staticcheck = true,
-						},
-					},
-				})
-			)
-
-			-- TypeScript/JavaScript via vtsls
-			vim.lsp.config(
-				"vtsls",
-				with_common({
-					settings = {
-						vtsls = { enableMoveToFileCodeAction = true },
-						typescript = {
-							format = { semicolons = "insert" },
-							suggest = { completeFunctionCalls = true, autoImports = true },
-							updateImportsOnFileMove = { enabled = "always" },
-							preferences = {
-								importModuleSpecifierPreference = "non-relative",
-								includeCompletionsForImportStatements = true,
-								quotePreference = "auto",
-							},
-							inlayHints = {
-								includeInlayParameterNameHints = "all",
-								includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-								includeInlayFunctionParameterTypeHints = true,
-								includeInlayVariableTypeHints = true,
-								includeInlayVariableTypeHintsWhenTypeMatchesName = false,
-								includeInlayFunctionLikeReturnTypeHints = true,
-								includeInlayEnumMemberValueHints = true,
-							},
-						},
-						javascript = {
-							format = { semicolons = "insert" },
-							suggest = { completeFunctionCalls = true, autoImports = true },
-							updateImportsOnFileMove = { enabled = "always" },
-							preferences = {
-								importModuleSpecifierPreference = "non-relative",
-								includeCompletionsForImportStatements = true,
-								quotePreference = "auto",
-							},
-							inlayHints = {
-								includeInlayParameterNameHints = "all",
-								includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-								includeInlayFunctionParameterTypeHints = true,
-								includeInlayVariableTypeHints = true,
-								includeInlayVariableTypeHintsWhenTypeMatchesName = false,
-								includeInlayFunctionLikeReturnTypeHints = true,
-								includeInlayEnumMemberValueHints = true,
-							},
-						},
-					},
-				})
-			)
-
-			-- HTML
-			vim.lsp.config("html", with_common({}))
-
-			-- Markdown
-			vim.lsp.config("marksman", with_common({}))
-
-			---------------------------------------------------------------------------
-			-- If you want to manually force enabling (not needed when automatic_enable=true)
-			-- vim.lsp.enable({ "pyright", "gopls", "vtsls", "html", "marksman" })
-			---------------------------------------------------------------------------
-
-			---------------------------------------------------------------------------
-			-- Diagnostics (in 0.11 virtual_text is opt-in; this already enables it)
-			---------------------------------------------------------------------------
-			vim.diagnostic.config({
-				virtual_text = { spacing = 2, prefix = "●" },
-				severity_sort = true,
-				float = { border = "rounded" },
-			})
-
-			-- Default border for all floats (hover/signature etc.) on 0.11+
-			vim.o.winborder = "rounded"
-		end,
-	},
+      -- Enable them (activates per filetype)
+      vim.lsp.enable({
+        "pyright",
+        "ts_ls",
+        "gopls",
+        "clangd",
+        "bashls",
+        "marksman",
+      })
+    end,
+  },
 }

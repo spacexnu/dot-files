@@ -1,1 +1,8 @@
 /.idea/
+nvim/nvim.lock.json
+.emacs.d/.cache/
+.emacs.d/eln-cache/
+.emacs.d/elpa/
+.emacs.d/eshell/
+.emacs.d/projects
+.emacs.d/transient/

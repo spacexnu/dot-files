@@ -1,0 +1,48 @@
+return {
+--   -- Copilot core (autocomplete)
+--   {
+--     "zbirenbaum/copilot.lua",
+--     cmd = "Copilot",
+--     event = "InsertEnter",
+--     config = function()
+--       require("copilot").setup({
+--         suggestion = {
+--           enabled = true,
+--           auto_trigger = true,
+--           keymap = {
+--             accept = "<C-l>",     -- accept suggestion (same as set in Codeium)
+--             next = "<C-]>",       -- next suggestion
+--             prev = "<C-[>",       -- previous
+--             dismiss = "<C-x>",    -- dismiss
+--           },
+--         },
+--         panel = { enabled = false },
+--       })
+--     end,
+--   },
+--
+--   -- Copilot Chat (chat inside Neovim)
+--   {
+--     "CopilotC-Nvim/CopilotChat.nvim",
+--     dependencies = {
+--       "zbirenbaum/copilot.lua",
+--       "nvim-lua/plenary.nvim",
+--     },
+--     cmd = {
+--       "CopilotChat",
+--       "CopilotChatOpen",
+--       "CopilotChatClose",
+--       "CopilotChatToggle",
+--     },
+--     config = function()
+--       require("CopilotChat").setup({
+--         -- defaults are OK; you can customize prompts later
+--       })
+--
+--       -- Keymaps (commented out too)
+--       -- local map = vim.keymap.set
+--       -- map("n", "<leader>cc", "<cmd>CopilotChatToggle<cr>", { desc = "Copilot Chat Toggle" })
+--       -- map("v", "<leader>cc", "<cmd>CopilotChat<cr>",       { desc = "Copilot Chat (visual)" })
+--     end,
+--   },
+ }
