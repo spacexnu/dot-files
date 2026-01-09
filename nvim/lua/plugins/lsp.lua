@@ -15,7 +15,7 @@ return {
     opts = {
       ensure_installed = {
         "pyright",
-        "tsserver", -- Mason package name (keep this)
+        "ts_ls", -- lspconfig name; mason-lspconfig maps it to typescript-language-server
         "gopls",
         "clangd",
         "bashls",
@@ -51,8 +51,7 @@ return {
       vim.lsp.config("marksman",  { capabilities = capabilities })
 
       -- TypeScript/JavaScript:
-      -- lspconfig renamed "tsserver" -> "ts_ls" (config name).
-      -- Mason still installs it as tsserver. Enable ts_ls here.
+      -- lspconfig name is now "ts_ls"; mason-lspconfig handles the mapping.
       vim.lsp.config("ts_ls",     { capabilities = capabilities })
 
       -- Enable them (activates per filetype)
