@@ -36,13 +36,7 @@ return {
    },
    config = function()
      require("CopilotChat").setup({
-       -- defaults are OK; you can customize prompts later
      })
---
-     -- Keymaps (commented out too)
-     -- local map = vim.keymap.set
-     -- map("n", "<leader>cc", "<cmd>CopilotChatToggle<cr>", { desc = "Copilot Chat Toggle" })
-     -- map("v", "<leader>cc", "<cmd>CopilotChat<cr>",       { desc = "Copilot Chat (visual)" })
    end,
  },
  }
