@@ -5,9 +5,9 @@ return {
     config = function()
       local wk = require("which-key")
       wk.setup()
-      wk.register({
-        f = { name = "Find" },
-      }, { prefix = "<leader>" })
+      wk.add({
+        { "<leader>f", group = "Find" },
+      })
     end,
   },
 }
