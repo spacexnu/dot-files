@@ -49,6 +49,9 @@ alias tls 'tmux ls'
 alias ss 'nvim (fzf -m --preview="bat --color=always {}")'
 alias vim=nvim
 
+# Functions
+test -f ~/.config/fish/functions.fish; and source ~/.config/fish/functions.fish
+
 # FZF integrations (if fzf is installed via homebrew and scripts are installed)
 if type -q fzf
     if status is-interactive

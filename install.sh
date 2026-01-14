@@ -373,6 +373,13 @@ if confirm "Do you want to install Fish shell configuration?" "y"; then
       print_error "Failed to install Fish cos_intro.fish"
     fi
   fi
+  if [ -f "$DOTFILES_DIR/fish/functions.fish" ]; then
+    if create_symlink "$DOTFILES_DIR/fish/functions.fish" "$HOME/.config/fish/functions.fish"; then
+      print_success "Fish functions.fish installed"
+    else
+      print_error "Failed to install Fish functions.fish"
+    fi
+  fi
 else
   print_info "Skipping Fish configuration"
 fi
