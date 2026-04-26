@@ -6,9 +6,11 @@ export VISUAL="nvim"
 export GPG_TTY=$(tty)
 
 # =============================================================================
-# Homebrew always compile
+# Homebrew always compile (macOS only)
 # =============================================================================
-export HOMEBREW_BUILD_FROM_SOURCE=1
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  export HOMEBREW_BUILD_FROM_SOURCE=1
+fi
 
 # -----------------------------------------------------------------------------
 # Completion System Configuration
@@ -20,16 +22,48 @@ compinit -d "${XDG_CACHE_HOME:-$HOME/.cache}/zcompdump"
 # -----------------------------------------------------------------------------
 # Load Modular Configuration Files
 # -----------------------------------------------------------------------------
-[[ -f ~/code/dot-files/zsh/config/env.zsh ]] && source ~/code/dot-files/zsh/config/env.zsh
-[[ -f ~/code/dot-files/zsh/config/aliases.zsh ]] && source ~/code/dot-files/zsh/config/aliases.zsh
-[[ -f ~/code/dot-files/zsh/config/functions.zsh ]] && source ~/code/dot-files/zsh/config/functions.zsh
+[[ -f ~/projects/dot-files/zsh/config/env.zsh ]] && source ~/projects/dot-files/zsh/config/env.zsh
+[[ -f ~/projects/dot-files/zsh/config/aliases.zsh ]] && source ~/projects/dot-files/zsh/config/aliases.zsh
+[[ -f ~/projects/dot-files/zsh/config/functions.zsh ]] && source ~/projects/dot-files/zsh/config/functions.zsh
+
+# -----------------------------------------------------------------------------
+# History Configuration
+# -----------------------------------------------------------------------------
+HISTFILE="${HISTFILE:-$HOME/.zsh_history}"
+HISTSIZE=100000
+SAVEHIST=100000
+
+setopt APPEND_HISTORY
+setopt EXTENDED_HISTORY
+setopt HIST_EXPIRE_DUPS_FIRST
+setopt HIST_FIND_NO_DUPS
+setopt HIST_IGNORE_ALL_DUPS
+setopt HIST_IGNORE_SPACE
+setopt HIST_REDUCE_BLANKS
+setopt HIST_SAVE_NO_DUPS
+setopt SHARE_HISTORY
 
 # -----------------------------------------------------------------------------
 # Fuzzy Finder (FZF) Configuration
 # -----------------------------------------------------------------------------
 if command -v fzf >/dev/null 2>&1; then
-  source "$(brew --prefix)/opt/fzf/shell/completion.zsh"
-  source "$(brew --prefix)/opt/fzf/shell/key-bindings.zsh"
+  fzf_base_dirs=(
+    "${HOMEBREW_PREFIX:-}/opt/fzf/shell"
+    "${HOMEBREW_PREFIX:-}/share/fzf/shell"
+    "/opt/homebrew/opt/fzf/shell"
+    "/usr/local/opt/fzf/shell"
+    "/home/linuxbrew/.linuxbrew/opt/fzf/shell"
+    "/usr/share/fzf"
+    "/usr/share/doc/fzf/examples"
+    "$HOME/.fzf/shell"
+  )
+
+  for fzf_base_dir in "${fzf_base_dirs[@]}"; do
+    [[ -f "$fzf_base_dir/completion.zsh" ]] && source "$fzf_base_dir/completion.zsh"
+    [[ -f "$fzf_base_dir/key-bindings.zsh" ]] && source "$fzf_base_dir/key-bindings.zsh" && break
+  done
+
+  unset fzf_base_dir fzf_base_dirs
 fi
 
 # -----------------------------------------------------------------------------
@@ -37,14 +71,9 @@ fi
 # -----------------------------------------------------------------------------
 # NVM
 export NVM_DIR="$HOME/.nvm"
-[[ -s "/opt/homebrew/opt/nvm/nvm.sh" ]] && source "/opt/homebrew/opt/nvm/nvm.sh"
-[[ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ]] && source "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"
+[[ -s "$NVM_DIR/nvm.sh" ]] && source "$NVM_DIR/nvm.sh"
+[[ -s "$NVM_DIR/bash_completion" ]] && source "$NVM_DIR/bash_completion"
 
-# SDKMAN
-[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
-
-# LM Studio
-path+=("$HOME/.lmstudio/bin")
 
 # -----------------------------------------------------------------------------
 # Prompt Configuration - Starship
@@ -63,3 +92,6 @@ eval "$(pyenv init - zsh)"
 # Shell Startup
 # -----------------------------------------------------------------------------
 [[ $- == *i* && -f ~/.cos_intro.zsh ]] && source ~/.cos_intro.zsh
+
+# Created by `pipx` on 2026-04-25 19:46:18
+export PATH="$PATH:/home/spacexnu/.local/bin"

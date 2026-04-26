@@ -64,8 +64,9 @@ sysinfo() {
 }
 
 # -----------------------------------------------------------------------------
-# Homebrew "source-first" helper commands
+# Homebrew "source-first" helper commands (macOS only)
 # -----------------------------------------------------------------------------
+if [[ "$(uname -s)" == "Darwin" ]]; then
 
 # Install formula from source (no bottle)
 brewi() {
@@ -116,3 +117,5 @@ brewupd() {
 brewout() {
   brew outdated --formula
 }
+
+fi

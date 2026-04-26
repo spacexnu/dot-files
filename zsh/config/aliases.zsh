@@ -23,11 +23,16 @@ alias tls="tmux ls"
 # -----------------------------------------------------------------------------
 # File Management Aliases
 # -----------------------------------------------------------------------------
-# Ensure colored output on macOS/BSD ls
-export CLICOLOR=${CLICOLOR:-1}
-alias ls='ls -G'
-# macOS BSD ls: -l (long) -a (all) -h (human) -t (mtime) -r (reverse) -G (color)
-alias ll='ls -lahtrG'
+# Ensure colored output
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  export CLICOLOR=${CLICOLOR:-1}
+  alias ls='ls -G'
+  # macOS BSD ls: -l (long) -a (all) -h (human) -t (mtime) -r (reverse) -G (color)
+  alias ll='ls -lahtrG'
+else
+  alias ls='ls --color=auto'
+  alias ll='ls -lahtr --color=auto'
+fi
 
 # -----------------------------------------------------------------------------
 # Editor Aliases
