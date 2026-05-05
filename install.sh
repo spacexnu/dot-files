@@ -12,7 +12,6 @@ set -euo pipefail
 # 2. Install dependencies (optional)
 # 3. Set up configurations for Zsh, Tmux, Starship, and related tools
 # 4. Create symbolic links to configuration files
-# 5. Offer to change your default shell to Fish
 
 # Set colors for output
 RED='\033[0;31m'
@@ -75,13 +74,16 @@ print_info() {
 # Create a backup of a file if it exists
 backup_file() {
   local target="$1"
-  if [ -e "$target" ]; then
+  if [ -e "$target" ] || [ -L "$target" ]; then
     local base_name="$(basename "$target")"
     local dir_name="$(dirname "$target")"
     local backup_file="$dir_name/${base_name}.backup.$(date +%Y%m%d%H%M%S)"
     print_info "Backing up $target to $backup_file"
-    mv "$target" "$backup_file"
-    return 0
+    if mv "$target" "$backup_file"; then
+      return 0
+    fi
+    print_error "Failed to back up $target"
+    return 1
   fi
   return 1
 }
@@ -104,17 +106,14 @@ create_symlink() {
   fi
 
   # Backup existing file or directory
-  backup_file "$target_file"
+  backup_file "$target_file" || true
 
   # Create parent directory if it doesn't exist
   mkdir -p "$(dirname "$target_file")"
 
   # Create the symlink
   print_info "Creating symlink from $source_file to $target_file"
-  ln -sfn "$source_file" "$target_file"
-
-  # Check if symlink was created successfully
-  if [ $? -eq 0 ]; then
+  if ln -sfn "$source_file" "$target_file"; then
     print_success "Symlink created successfully"
     return 0
   else
@@ -146,13 +145,6 @@ install_nvim_config() {
   fi
 }
 
-# Fast path: only install Neovim config and exit
-if $NVIM_ONLY; then
-  print_section "Neovim Configuration"
-  install_nvim_config
-  exit $?
-fi
-
 # Check if a command exists
 command_exists() {
   command -v "$1" >/dev/null 2>&1
@@ -173,14 +165,14 @@ confirm() {
     local options="y/N"
   fi
 
-  read -p "$prompt ($options) " -n 1 -r
-  echo
+  local reply
+  read -r -p "$prompt ($options) " reply
 
-  if [ -z "$REPLY" ]; then
-    REPLY="$default"
+  if [ -z "$reply" ]; then
+    reply="$default"
   fi
 
-  if [[ $REPLY =~ ^[Yy]$ ]]; then
+  if [[ $reply =~ ^[Yy]$ ]]; then
     return 0
   else
     return 1
@@ -211,7 +203,7 @@ elif [ "$(uname)" == "Linux" ]; then
     OS="wsl"
     print_success "WSL detected"
   fi
-elif [ "$(uname -o 2>/dev/null)" == "Msys" ] || [ "$(uname -o 2>/dev/null)" == "Cygwin" ] || [ -n "$WSLENV" ]; then
+elif [ "$(uname -o 2>/dev/null)" == "Msys" ] || [ "$(uname -o 2>/dev/null)" == "Cygwin" ] || [ -n "${WSLENV:-}" ]; then
   OS="windows"
   print_success "Windows (WSL/Cygwin/MSYS) detected"
 else
@@ -223,42 +215,218 @@ fi
 # -----------------------------------------------------------------------------
 print_section "Installing Dependencies"
 
-# List of dependencies to install
-DEPENDENCIES=(fzf tmux zellij lolcat fortune starship fish zoxide eza ripgrep fd bat)
+MIN_NVIM_MAJOR=0
+MIN_NVIM_MINOR=11
+
+MACOS_DEPENDENCIES=(git fzf tmux lolcat fortune starship zoxide eza ripgrep fd bat neovim zsh)
+DEBIAN_DEPENDENCIES=(curl unzip git fzf tmux lolcat fortune-mod zoxide ripgrep fd-find bat zsh)
+REDHAT_DEPENDENCIES=(curl unzip git fzf tmux lolcat fortune-mod starship zoxide eza ripgrep fd-find bat zsh)
+
+install_homebrew() {
+  if ! command_exists brew; then
+    print_info "Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  else
+    print_success "Homebrew is already installed"
+  fi
+}
+
+install_brew_packages() {
+  install_homebrew
+  print_info "Updating Homebrew..."
+  brew update || print_warning "Homebrew update failed; continuing with package installation"
+
+  for package in "$@"; do
+    if brew list --formula "$package" >/dev/null 2>&1; then
+      print_success "$package is already installed"
+    else
+      brew install "$package" || print_warning "Failed to install $package with Homebrew"
+    fi
+  done
+}
+
+install_apt_packages() {
+  if ! command_exists apt; then
+    print_warning "apt was not found. Please install dependencies manually."
+    return 0
+  fi
+
+  sudo apt update || { print_error "apt update failed"; return 1; }
+  for package in "$@"; do
+    sudo apt install -y "$package" || print_warning "Failed to install $package with apt"
+  done
+
+  if command_exists fdfind && ! command_exists fd; then
+    mkdir -p "$HOME/.local/bin"
+    ln -sfn "$(command -v fdfind)" "$HOME/.local/bin/fd" || print_warning "Failed to create fd compatibility symlink"
+  fi
+
+  if command_exists batcat && ! command_exists bat; then
+    mkdir -p "$HOME/.local/bin"
+    ln -sfn "$(command -v batcat)" "$HOME/.local/bin/bat" || print_warning "Failed to create bat compatibility symlink"
+  fi
+}
+
+nvim_version_meets_minimum() {
+  command_exists nvim || return 1
+
+  local version major minor
+  version="$(nvim --version | awk 'NR == 1 {print $2}' | sed 's/^v//')"
+  major="${version%%.*}"
+  version="${version#*.}"
+  minor="${version%%.*}"
+
+  [[ "$major" =~ ^[0-9]+$ ]] || return 1
+  [[ "$minor" =~ ^[0-9]+$ ]] || return 1
+
+  if [ "$major" -gt "$MIN_NVIM_MAJOR" ]; then
+    return 0
+  fi
+
+  if [ "$major" -eq "$MIN_NVIM_MAJOR" ] && [ "$minor" -ge "$MIN_NVIM_MINOR" ]; then
+    return 0
+  fi
+
+  return 1
+}
+
+install_neovim_linux_release() {
+  if nvim_version_meets_minimum; then
+    print_success "Neovim $(nvim --version | awk 'NR == 1 {print $2}') is already installed"
+    return 0
+  fi
+
+  if ! command_exists curl; then
+    print_error "curl is required to install the official Neovim release"
+    return 1
+  fi
+
+  local machine asset_arch archive url install_dir tmp_archive
+  machine="$(uname -m)"
+  case "$machine" in
+    x86_64|amd64)
+      asset_arch="x86_64"
+      ;;
+    aarch64|arm64)
+      asset_arch="arm64"
+      ;;
+    *)
+      print_error "Unsupported Linux architecture for Neovim release: $machine"
+      return 1
+      ;;
+  esac
+
+  archive="nvim-linux-${asset_arch}.tar.gz"
+  url="https://github.com/neovim/neovim/releases/latest/download/${archive}"
+  install_dir="/opt/nvim-linux-${asset_arch}"
+  tmp_archive="/tmp/${archive}"
+
+  print_info "Installing official Neovim release from $url"
+  curl -fL "$url" -o "$tmp_archive" || { print_error "Failed to download Neovim"; return 1; }
+  sudo rm -rf "$install_dir"
+  sudo tar -C /opt -xzf "$tmp_archive"
+  sudo ln -sfn "$install_dir/bin/nvim" /usr/local/bin/nvim
+  hash -r 2>/dev/null || true
+
+  if nvim_version_meets_minimum; then
+    print_success "Installed Neovim $(nvim --version | awk 'NR == 1 {print $2}')"
+    return 0
+  fi
+
+  print_error "Neovim installation completed, but nvim is still older than ${MIN_NVIM_MAJOR}.${MIN_NVIM_MINOR}"
+  print_info "Make sure /usr/local/bin appears before /usr/bin in PATH."
+  return 1
+}
+
+ensure_modern_neovim_for_config() {
+  if nvim_version_meets_minimum; then
+    return 0
+  fi
+
+  print_warning "This Neovim config expects Neovim ${MIN_NVIM_MAJOR}.${MIN_NVIM_MINOR}+."
+
+  case $OS in
+    macos)
+      if confirm "Do you want to install or upgrade Neovim with Homebrew?" "y"; then
+        install_brew_packages neovim || print_warning "Failed to install Neovim with Homebrew"
+      fi
+      ;;
+    debian|wsl)
+      if confirm "Do you want to install Neovim ${MIN_NVIM_MAJOR}.${MIN_NVIM_MINOR}+ from the official release?" "y"; then
+        if ! command_exists curl; then
+          sudo apt update && sudo apt install -y curl || {
+            print_warning "Failed to install curl; cannot download Neovim"
+            return 0
+          }
+        fi
+        install_neovim_linux_release || print_warning "Failed to install modern Neovim from the official release"
+      fi
+      ;;
+    redhat)
+      if confirm "Do you want to install Neovim ${MIN_NVIM_MAJOR}.${MIN_NVIM_MINOR}+ from the official release?" "y"; then
+        if ! command_exists curl; then
+          if command_exists dnf; then
+            sudo dnf install -y curl || {
+              print_warning "Failed to install curl; cannot download Neovim"
+              return 0
+            }
+          else
+            sudo yum install -y curl || {
+              print_warning "Failed to install curl; cannot download Neovim"
+              return 0
+            }
+          fi
+        fi
+        install_neovim_linux_release || print_warning "Failed to install modern Neovim from the official release"
+      fi
+      ;;
+    linux)
+      if command_exists curl && confirm "Do you want to install Neovim ${MIN_NVIM_MAJOR}.${MIN_NVIM_MINOR}+ from the official release?" "y"; then
+        install_neovim_linux_release || print_warning "Failed to install modern Neovim from the official release"
+      else
+        print_warning "Install Neovim ${MIN_NVIM_MAJOR}.${MIN_NVIM_MINOR}+ manually before opening this config."
+      fi
+      ;;
+    *)
+      print_warning "Install Neovim ${MIN_NVIM_MAJOR}.${MIN_NVIM_MINOR}+ manually before opening this config."
+      ;;
+  esac
+}
 
 install_dependencies() {
   case $OS in
     macos)
-      if ! command_exists brew; then
-        print_info "Installing Homebrew..."
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-      else
-        print_success "Homebrew is already installed"
-      fi
-
       print_info "Installing required packages with Homebrew..."
-      brew update
-      brew install "${DEPENDENCIES[@]}"
+      install_brew_packages "${MACOS_DEPENDENCIES[@]}"
       ;;
-    debian)
+    debian|wsl)
       print_info "Installing required packages with apt..."
-      sudo apt update
-      sudo apt install -y "${DEPENDENCIES[@]}"
+      install_apt_packages "${DEBIAN_DEPENDENCIES[@]}"
+      install_neovim_linux_release || print_warning "Failed to install modern Neovim from the official release"
       ;;
     redhat)
       print_info "Installing required packages with dnf/yum..."
       if command_exists dnf; then
-        sudo dnf install -y "${DEPENDENCIES[@]}"
+        sudo dnf install -y "${REDHAT_DEPENDENCIES[@]}" || print_warning "Some dependencies failed to install with dnf"
       else
-        sudo yum install -y "${DEPENDENCIES[@]}"
+        sudo yum install -y "${REDHAT_DEPENDENCIES[@]}" || print_warning "Some dependencies failed to install with yum"
       fi
+      install_neovim_linux_release || print_warning "Failed to install modern Neovim from the official release"
       ;;
     *)
       print_warning "Automatic dependency installation is not supported on this OS."
-      print_info "Please install the following dependencies manually: ${DEPENDENCIES[*]}"
+      print_info "Please install these tools manually: curl unzip git fzf tmux lolcat fortune starship zoxide eza ripgrep fd bat neovim 0.11+ zsh"
       ;;
   esac
 }
+
+# Fast path: only install Neovim config and its required Neovim version
+if $NVIM_ONLY; then
+  print_section "Neovim Configuration"
+  ensure_modern_neovim_for_config
+  install_nvim_config
+  exit $?
+fi
 
 # Offer to install Nerd Fonts
 if confirm "Do you want to install Nerd Fonts?" "n"; then
@@ -274,7 +442,7 @@ if confirm "Do you want to install Nerd Fonts?" "n"; then
         print_error "Failed to install Fira Code Nerd Font. Please install it manually from https://www.nerdfonts.com/font-downloads"
       fi
       ;;
-    debian)
+    debian|wsl)
       sudo apt install -y fonts-firacode || print_warning "Failed to install Fira Code Nerd Font via apt"
       ;;
     *)
@@ -288,43 +456,6 @@ if confirm "Do you want to install dependencies?" "n"; then
   install_dependencies || { print_error "Dependency installation failed"; exit 1; }
 else
   print_info "Skipping dependency installation"
-fi
-
-# -----------------------------------------------------------------------------
-# Explicit Fish Installation (in case dependencies were skipped or fish missing)
-# -----------------------------------------------------------------------------
-if ! command_exists fish; then
-  if confirm "Fish is not installed. Do you want to install Fish now?" "y"; then
-    case $OS in
-      macos)
-        if ! command_exists brew; then
-          print_info "Installing Homebrew..."
-          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        fi
-        print_info "Installing Fish via Homebrew..."
-        brew install fish && print_success "Fish installed" || print_error "Failed to install Fish"
-        ;;
-      debian)
-        print_info "Installing Fish via apt..."
-        sudo apt update && sudo apt install -y fish && print_success "Fish installed" || print_error "Failed to install Fish"
-        ;;
-      redhat)
-        print_info "Installing Fish via dnf/yum..."
-        if command_exists dnf; then
-          sudo dnf install -y fish && print_success "Fish installed" || print_error "Failed to install Fish"
-        else
-          sudo yum install -y fish && print_success "Fish installed" || print_error "Failed to install Fish"
-        fi
-        ;;
-      *)
-        print_warning "Automatic Fish installation not supported on this OS."
-        ;;
-    esac
-  else
-    print_info "Skipping Fish installation"
-  fi
-else
-  print_info "Fish already installed at $(command -v fish)"
 fi
 
 # -----------------------------------------------------------------------------
@@ -358,33 +489,6 @@ else
   print_info "Skipping Zsh configuration"
 fi
 
-# Fish shell configuration
-if confirm "Do you want to install Fish shell configuration?" "y"; then
-  mkdir -p "$HOME/.config/fish"
-  if create_symlink "$DOTFILES_DIR/fish/config.fish" "$HOME/.config/fish/config.fish"; then
-    print_success "Fish config.fish installed"
-  else
-    print_error "Failed to install Fish config.fish"
-  fi
-  if [ -f "$DOTFILES_DIR/fish/cos_intro.fish" ]; then
-    if create_symlink "$DOTFILES_DIR/fish/cos_intro.fish" "$HOME/.config/fish/cos_intro.fish"; then
-      print_success "Fish cos_intro.fish installed"
-    else
-      print_error "Failed to install Fish cos_intro.fish"
-    fi
-  fi
-  if [ -f "$DOTFILES_DIR/fish/functions.fish" ]; then
-    if create_symlink "$DOTFILES_DIR/fish/functions.fish" "$HOME/.config/fish/functions.fish"; then
-      print_success "Fish functions.fish installed"
-    else
-      print_error "Failed to install Fish functions.fish"
-    fi
-  fi
-else
-  print_info "Skipping Fish configuration"
-fi
-
-
 # Tmux configuration
 if confirm "Do you want to install Tmux configuration?" "y"; then
   if [ -f "$DOTFILES_DIR/tmux/.tmux.conf" ]; then
@@ -395,53 +499,6 @@ if confirm "Do you want to install Tmux configuration?" "y"; then
   fi
 else
   print_info "Skipping Tmux configuration"
-fi
-
-# Zellij configuration
-if confirm "Do you want to install Zellij configuration?" "y"; then
-  mkdir -p "$HOME/.config/zellij"
-  if [ -f "$DOTFILES_DIR/zellij/config.kdl" ]; then
-    create_symlink "$DOTFILES_DIR/zellij/config.kdl" "$HOME/.config/zellij/config.kdl"
-    print_success "Zellij configuration installed"
-    print_info "Theme set to catppuccin-frappe (all other defaults)."
-    # Install Catppuccin themes for Zellij
-    if command_exists git; then
-      if [ ! -d "$HOME/.config/zellij/themes" ]; then
-        print_info "Cloning Catppuccin Zellij themes..."
-        git clone https://github.com/catppuccin/zellij "$HOME/.config/zellij/themes" && \
-          print_success "Catppuccin themes cloned to ~/.config/zellij/themes" || \
-          print_warning "Failed to clone Catppuccin themes"
-      else
-        if [ -d "$HOME/.config/zellij/themes/.git" ]; then
-          print_info "Updating Catppuccin Zellij themes..."
-          git -C "$HOME/.config/zellij/themes" pull --ff-only && \
-            print_success "Catppuccin themes updated" || \
-            print_warning "Failed to update Catppuccin themes"
-        else
-          print_info "Themes directory already exists at ~/.config/zellij/themes"
-        fi
-      fi
-
-      # If the repository contains a nested themes directory, expose .kdl files at top-level
-      if [ -d "$HOME/.config/zellij/themes/themes" ]; then
-        for kdl in "$HOME/.config/zellij/themes/themes"/*.kdl; do
-          [ -e "$kdl" ] || continue
-          base_name="$(basename "$kdl")"
-          target_kdl="$HOME/.config/zellij/themes/$base_name"
-          if [ ! -e "$target_kdl" ]; then
-            ln -sfn "$kdl" "$target_kdl"
-          fi
-        done
-        print_info "Ensured Catppuccin .kdl files are available in ~/.config/zellij/themes"
-      fi
-    else
-      print_warning "Git not found. Skipping Catppuccin themes installation."
-    fi
-  else
-    print_error "Zellij configuration file not found"
-  fi
-else
-  print_info "Skipping Zellij configuration"
 fi
 
 # Git configuration
@@ -464,14 +521,8 @@ fi
 
 # Neovim configuration
 if confirm "Do you want to install Neovim configuration?" "y"; then
-  mkdir -p "$HOME/.config"
-  if [ -d "$DOTFILES_DIR/nvim" ]; then
-    create_symlink "$DOTFILES_DIR/nvim" "$HOME/.config/nvim"
-    print_success "Neovim configuration installed"
-    print_info "Open Neovim and run :Lazy then :Mason to install plugins and tools."
-  else
-    print_error "Neovim configuration directory not found at $DOTFILES_DIR/nvim"
-  fi
+  ensure_modern_neovim_for_config
+  install_nvim_config || print_warning "Neovim configuration was not installed"
 else
   print_info "Skipping Neovim configuration"
 fi
@@ -480,29 +531,6 @@ fi
 if [ "$OS" == "macos" ]; then
   print_info "iTerm2 configurations need to be imported manually from:"
   print_info "$DOTFILES_DIR/iterm2/profiles/"
-fi
-
-# -----------------------------------------------------------------------------
-# Shell Configuration
-# -----------------------------------------------------------------------------
-print_section "Shell Configuration"
-
-if [ "$OS" == "macos" ]; then
-  if confirm "Do you want to change your default shell to Fish?" "n"; then
-    if command_exists dscl; then
-      FISH_PATH="$(command -v fish)"
-      if [ -n "$FISH_PATH" ]; then
-        print_info "Changing default shell to Fish ($FISH_PATH) using dscl..."
-        sudo dscl . -create /Users/"$USER" UserShell "$FISH_PATH" && print_success "Default shell changed to Fish" || print_error "Failed to change default shell"
-      else
-        print_error "Fish shell not found in PATH"
-      fi
-    else
-      print_error "dscl command not found. Cannot change shell."
-    fi
-  else
-    print_info "Skipping default shell change"
-  fi
 fi
 
 # -----------------------------------------------------------------------------

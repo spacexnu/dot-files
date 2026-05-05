@@ -1,5 +1,5 @@
-### > ⚙️ **Note**: I'm currently experimenting with a new streamlined workflow. 
-I'm simplifying my environment and reducing tool dependencies. This setup reflects an ongoing test where I'm reducing reliance on IntelliJ due to the high cost of IntelliJ IDEA Ultimate and the AI Assistant, which is expensive and not efficient. I am testing a new stack using Neovim and Visual Studio Code combined with OpenAI Codex, and also experimenting with Gemini CLI. Fish shell remains the default choice in this streamlined workflow. 
+### > ⚙️ **Note**: I'm currently experimenting with a new streamlined workflow.
+I'm simplifying my environment and reducing tool dependencies. This setup reflects an ongoing test where I'm reducing reliance on IntelliJ due to the high cost of IntelliJ IDEA Ultimate and the AI Assistant, which is expensive and not efficient. I am testing a new stack using Neovim and Visual Studio Code combined with OpenAI Codex, and also experimenting with Gemini CLI.
 
 **Vim configurations are being removed and are only kept here as a glimpse of the past, since the focus moving forward will be exclusively on Neovim.**
 Some configurations may be deprecated or under revision during this transition.
@@ -12,9 +12,9 @@ This repository contains my personal dotfiles for various tools and applications
 
 These dotfiles include configurations for:
 
-- **Shell environments**: Bash, Zsh, Fish
+- **Shell environments**: Bash, Zsh
 - **Text editors**: Vim, Neovim, Emacs
-- **Terminal multiplexers**: Tmux, Zellij
+- **Terminal multiplexers**: Tmux
 - **Terminal emulators**: iTerm2
 - **IDE integrations**: IdeaVim
 - **Shell prompts**: Starship
@@ -27,8 +27,7 @@ Before installing these dotfiles, ensure you have the following dependencies ins
 
 - Git
 - Zsh (if using Zsh configurations)
-- Fish (if using Fish configurations)
-- Vim/Neovim (if using Vim/Neovim configurations)
+- Neovim 0.11+ (if using Neovim configurations)
 - Emacs (if using Emacs configurations)
 - Tmux (if using Tmux configurations)
 - iTerm2 (if on macOS and using iTerm2 configurations)
@@ -79,6 +78,8 @@ The Vim/Neovim configuration includes:
 - Plugin management
 - Syntax highlighting and code formatting
 
+The install script installs Neovim from the official upstream Linux release on Linux/WSL because Ubuntu's `apt` package can lag behind plugin requirements.
+
 ### Tmux Configuration
 
 The Tmux configuration includes:
@@ -86,34 +87,12 @@ The Tmux configuration includes:
 - Status bar customization
 - Session management
 
-### Zellij Configuration
-
-The Zellij configuration includes:
-- Defaults preserved with a custom theme
-- Theme set to `catppuccin-frappe`
-
-To enable the Catppuccin themes (used by the config), install the theme files:
-
-```bash
-git clone https://github.com/catppuccin/zellij ~/.config/zellij/themes
-```
-
-The install script also performs this step (and updates it if already present).
-
 ### Starship Configuration
 
 The Starship configuration includes:
 - Custom prompt styling
 - Git integration
 - Command execution time display
-
-### Fish Configuration
-
-The Fish configuration includes:
-- PATH management
-- Integration with Starship and zoxide
-- Custom aliases
-- Custom greeting (cos_intro)
 
 ## Customization
 
