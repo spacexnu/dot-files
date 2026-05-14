@@ -15,7 +15,7 @@ export STARSHIP_CONFIG=~/code/dot-files/starship/starship.toml
 # -----------------------------------------------------------------------------
 # Path Configuration
 # -----------------------------------------------------------------------------
-export PATH="$PATH:/usr/local/clamav/bin:/usr/local/clamav/sbin"
+export PATH="$HOME/.local/bin:$PATH:/usr/local/clamav/bin:/usr/local/clamav/sbin"
 
 # -----------------------------------------------------------------------------
 # Development Tools Configuration

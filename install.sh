@@ -185,6 +185,7 @@ confirm() {
 print_section "Detecting Operating System"
 
 OS="unknown"
+IS_WSL=false
 if [ "$(uname)" == "Darwin" ]; then
   OS="macos"
   print_success "macOS detected"
@@ -192,6 +193,9 @@ elif [ "$(uname)" == "Linux" ]; then
   if [ -f /etc/debian_version ]; then
     OS="debian"
     print_success "Debian/Ubuntu Linux detected"
+  elif [ -f /etc/os-release ] && grep -qiE "opensuse|suse|sles" /etc/os-release; then
+    OS="opensuse"
+    print_success "openSUSE/SLES Linux detected"
   elif [ -f /etc/redhat-release ]; then
     OS="redhat"
     print_success "Red Hat/CentOS/Fedora Linux detected"
@@ -200,8 +204,8 @@ elif [ "$(uname)" == "Linux" ]; then
     print_success "Linux detected"
   fi
   if grep -qi microsoft /proc/version 2>/dev/null; then
-    OS="wsl"
-    print_success "WSL detected"
+    IS_WSL=true
+    print_success "WSL environment detected"
   fi
 elif [ "$(uname -o 2>/dev/null)" == "Msys" ] || [ "$(uname -o 2>/dev/null)" == "Cygwin" ] || [ -n "${WSLENV:-}" ]; then
   OS="windows"
@@ -221,6 +225,7 @@ MIN_NVIM_MINOR=11
 MACOS_DEPENDENCIES=(git fzf tmux lolcat fortune starship zoxide eza ripgrep fd bat neovim zsh)
 DEBIAN_DEPENDENCIES=(curl unzip git fzf tmux lolcat fortune-mod zoxide ripgrep fd-find bat zsh)
 REDHAT_DEPENDENCIES=(curl unzip git fzf tmux lolcat fortune-mod starship zoxide eza ripgrep fd-find bat zsh)
+OPENSUSE_DEPENDENCIES=(curl unzip git fzf tmux lolcat fortune starship zoxide ripgrep fd bat zsh procps procps-uptime hostname)
 
 install_homebrew() {
   if ! command_exists brew; then
@@ -265,6 +270,18 @@ install_apt_packages() {
     mkdir -p "$HOME/.local/bin"
     ln -sfn "$(command -v batcat)" "$HOME/.local/bin/bat" || print_warning "Failed to create bat compatibility symlink"
   fi
+}
+
+install_zypper_packages() {
+  if ! command_exists zypper; then
+    print_warning "zypper was not found. Please install dependencies manually."
+    return 0
+  fi
+
+  sudo zypper refresh || { print_error "zypper refresh failed"; return 1; }
+  for package in "$@"; do
+    sudo zypper install -y "$package" || print_warning "Failed to install $package with zypper"
+  done
 }
 
 nvim_version_meets_minimum() {
@@ -351,10 +368,21 @@ ensure_modern_neovim_for_config() {
         install_brew_packages neovim || print_warning "Failed to install Neovim with Homebrew"
       fi
       ;;
-    debian|wsl)
+    debian)
       if confirm "Do you want to install Neovim ${MIN_NVIM_MAJOR}.${MIN_NVIM_MINOR}+ from the official release?" "y"; then
         if ! command_exists curl; then
           sudo apt update && sudo apt install -y curl || {
+            print_warning "Failed to install curl; cannot download Neovim"
+            return 0
+          }
+        fi
+        install_neovim_linux_release || print_warning "Failed to install modern Neovim from the official release"
+      fi
+      ;;
+    opensuse)
+      if confirm "Do you want to install Neovim ${MIN_NVIM_MAJOR}.${MIN_NVIM_MINOR}+ from the official release?" "y"; then
+        if ! command_exists curl; then
+          sudo zypper install -y curl || {
             print_warning "Failed to install curl; cannot download Neovim"
             return 0
           }
@@ -399,10 +427,31 @@ install_dependencies() {
       print_info "Installing required packages with Homebrew..."
       install_brew_packages "${MACOS_DEPENDENCIES[@]}"
       ;;
-    debian|wsl)
+    debian)
       print_info "Installing required packages with apt..."
       install_apt_packages "${DEBIAN_DEPENDENCIES[@]}"
       install_neovim_linux_release || print_warning "Failed to install modern Neovim from the official release"
+      if ! command_exists starship; then
+        print_info "Installing starship from official installer..."
+        mkdir -p "$HOME/.local/bin"
+        curl -sS https://starship.rs/install.sh | sh -s -- --yes --bin-dir "$HOME/.local/bin" || print_warning "Failed to install starship"
+      fi
+      ;;
+    opensuse)
+      print_info "Installing required packages with zypper..."
+      install_zypper_packages "${OPENSUSE_DEPENDENCIES[@]}"
+      install_neovim_linux_release || print_warning "Failed to install modern Neovim from the official release"
+      if ! infocmp tmux-256color &>/dev/null; then
+        print_info "Compiling tmux-256color terminfo entry (missing from openSUSE by default)..."
+        if command_exists curl && command_exists tic; then
+          curl -s https://invisible-island.net/datafiles/current/terminfo.src.gz \
+            | gunzip | tic -xe tmux-256color - \
+            && print_success "tmux-256color terminfo installed" \
+            || print_warning "Failed to compile tmux-256color terminfo; tmux may prompt for terminal type"
+        else
+          print_warning "curl or tic not found; cannot compile tmux-256color terminfo"
+        fi
+      fi
       ;;
     redhat)
       print_info "Installing required packages with dnf/yum..."
@@ -442,8 +491,19 @@ if confirm "Do you want to install Nerd Fonts?" "n"; then
         print_error "Failed to install Fira Code Nerd Font. Please install it manually from https://www.nerdfonts.com/font-downloads"
       fi
       ;;
-    debian|wsl)
+    debian)
       sudo apt install -y fonts-firacode || print_warning "Failed to install Fira Code Nerd Font via apt"
+      ;;
+    opensuse)
+      FONT_URL="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.zip"
+      FONT_DEST="$HOME/.local/share/fonts"
+      mkdir -p "$FONT_DEST"
+      print_info "Downloading FiraCode Nerd Font..."
+      if curl -L -o /tmp/FiraCode.zip "$FONT_URL" && unzip -o /tmp/FiraCode.zip -d "$FONT_DEST"; then
+        fc-cache -fv && print_success "Fira Code Nerd Font installed to $FONT_DEST"
+      else
+        print_error "Failed to install Fira Code Nerd Font. Please install it manually from https://www.nerdfonts.com/font-downloads"
+      fi
       ;;
     *)
       print_info "Please install the Fira Code Nerd Font manually from https://www.nerdfonts.com if it's not available for your system."
