@@ -47,23 +47,28 @@ setopt SHARE_HISTORY
 # Fuzzy Finder (FZF) Configuration
 # -----------------------------------------------------------------------------
 if command -v fzf >/dev/null 2>&1; then
-  fzf_base_dirs=(
-    "${HOMEBREW_PREFIX:-}/opt/fzf/shell"
-    "${HOMEBREW_PREFIX:-}/share/fzf/shell"
-    "/opt/homebrew/opt/fzf/shell"
-    "/usr/local/opt/fzf/shell"
-    "/home/linuxbrew/.linuxbrew/opt/fzf/shell"
-    "/usr/share/fzf"
-    "/usr/share/doc/fzf/examples"
-    "$HOME/.fzf/shell"
-  )
+  if fzf --zsh >/dev/null 2>&1; then
+    eval "$(fzf --zsh)"
+  else
+    fzf_base_dirs=(
+      "${HOMEBREW_PREFIX:-}/opt/fzf/shell"
+      "${HOMEBREW_PREFIX:-}/share/fzf/shell"
+      "/opt/homebrew/opt/fzf/shell"
+      "/usr/local/opt/fzf/shell"
+      "/home/linuxbrew/.linuxbrew/opt/fzf/shell"
+      "/usr/share/fzf/shell"
+      "/usr/share/fzf"
+      "/usr/share/doc/fzf/examples"
+      "$HOME/.fzf/shell"
+    )
 
-  for fzf_base_dir in "${fzf_base_dirs[@]}"; do
-    [[ -f "$fzf_base_dir/completion.zsh" ]] && source "$fzf_base_dir/completion.zsh"
-    [[ -f "$fzf_base_dir/key-bindings.zsh" ]] && source "$fzf_base_dir/key-bindings.zsh" && break
-  done
+    for fzf_base_dir in "${fzf_base_dirs[@]}"; do
+      [[ -f "$fzf_base_dir/completion.zsh" ]] && source "$fzf_base_dir/completion.zsh"
+      [[ -f "$fzf_base_dir/key-bindings.zsh" ]] && source "$fzf_base_dir/key-bindings.zsh" && break
+    done
 
-  unset fzf_base_dir fzf_base_dirs
+    unset fzf_base_dir fzf_base_dirs
+  fi
 fi
 
 # -----------------------------------------------------------------------------
