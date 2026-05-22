@@ -26,20 +26,20 @@ $time\
 [ ](fg:comment)\
 $line_break$character"""
 
-palette = "solarized_light"
+palette = "tokyo_night"
 
-[palettes.solarized_light]
-bg0 = "#fdf6e3"
-bg1 = "#eee8d5"
-blue = "#268bd2"
-cyan = "#2aa198"
-green = "#859900"
-magenta = "#d33682"
-orange = "#cb4b16"
-red = "#dc322f"
-yellow = "#b58900"
-comment = "#93a1a1"
-fg = "#586e75"
+[palettes.tokyo_night]
+bg0 = "#1a1b26"
+bg1 = "#24283b"
+blue = "#7aa2f7"
+cyan = "#7dcfff"
+green = "#9ece6a"
+magenta = "#bb9af7"
+orange = "#ff9e64"
+red = "#f7768e"
+yellow = "#e0af68"
+comment = "#565f89"
+fg = "#c0caf5"
 
 [os]
 disabled = false
