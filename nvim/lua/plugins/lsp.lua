@@ -3,10 +3,11 @@ return {
 	{ "neovim/nvim-lspconfig" },
 
 	-- Install LSP servers
-	{ "williamboman/mason.nvim", config = true },
+	{ "williamboman/mason.nvim", cmd = "Mason", config = true },
 
 	{
 		"williamboman/mason-lspconfig.nvim",
+		event = { "BufReadPre", "BufNewFile" },
 		dependencies = {
 			"williamboman/mason.nvim",
 			"hrsh7th/cmp-nvim-lsp",
@@ -39,8 +40,17 @@ return {
 					map("n", "gr", vim.lsp.buf.references, "References")
 					map("n", "K", vim.lsp.buf.hover, "Hover")
 					map("n", "<leader>rn", vim.lsp.buf.rename, "Rename")
-					map("n", "<leader>ca", vim.lsp.buf.code_action, "Code action")
+					map({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, "Code action")
+					map("n", "<leader>cd", vim.diagnostic.open_float, "Line diagnostics")
+					map("n", "[d", function() vim.diagnostic.jump({ count = -1 }) end, "Prev diagnostic")
+					map("n", "]d", function() vim.diagnostic.jump({ count = 1 }) end, "Next diagnostic")
 				end,
+			})
+
+			vim.diagnostic.config({
+				virtual_text = true,
+				severity_sort = true,
+				float = { border = "rounded", source = true },
 			})
 
 			-- Configure servers using the new API (NO require('lspconfig') framework)

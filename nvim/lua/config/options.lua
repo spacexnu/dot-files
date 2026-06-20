@@ -21,3 +21,32 @@ vim.opt.timeoutlen = 400
 
 vim.opt.splitright = true
 vim.opt.splitbelow = true
+
+-- Persistent undo across sessions
+vim.opt.undofile = true
+
+-- Keep context around the cursor and avoid jumpy horizontal scroll
+vim.opt.scrolloff = 8
+vim.opt.sidescrolloff = 8
+
+-- Faster, quieter editing
+vim.opt.confirm = true
+vim.opt.cursorline = true
+vim.opt.wrap = false
+
+-- Go uses tabs; don't expand there
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "go", "gomod" },
+  callback = function()
+    vim.opt_local.expandtab = false
+    vim.opt_local.tabstop = 4
+    vim.opt_local.shiftwidth = 4
+  end,
+})
+
+-- Briefly highlight yanked text
+vim.api.nvim_create_autocmd("TextYankPost", {
+  callback = function()
+    vim.highlight.on_yank()
+  end,
+})

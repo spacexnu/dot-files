@@ -1,10 +1,12 @@
 return {
   {
     "nvim-tree/nvim-tree.lua",
-    dependencies = { "nvim-tree/nvim-web-devicons" },
+    cmd = { "NvimTreeToggle", "NvimTreeFindFile" },
+    keys = {
+      { "<leader>e", "<cmd>NvimTreeToggle<cr>", desc = "Explorer toggle" },
+    },
     config = function()
       require("nvim-tree").setup()
-      vim.keymap.set("n", "<leader>e", "<cmd>NvimTreeToggle<cr>")
     end,
   },
 }

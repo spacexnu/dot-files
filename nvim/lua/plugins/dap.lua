@@ -1,47 +1,80 @@
 return {
-	{ "mfussenegger/nvim-dap" },
+  {
+    "mfussenegger/nvim-dap",
+    dependencies = {
+      "rcarriga/nvim-dap-ui",
+      "nvim-neotest/nvim-nio",
+      "theHamsta/nvim-dap-virtual-text",
 
-	{
-		"rcarriga/nvim-dap-ui",
-		dependencies = {
-			"mfussenegger/nvim-dap",
-			"nvim-neotest/nvim-nio",
-		},
-		config = function()
-			local dap = require("dap")
-			local dapui = require("dapui")
+      -- Adapters / debug binaries
+      "jay-babu/mason-nvim-dap.nvim",
+      "mfussenegger/nvim-dap-python",
+      "leoluz/nvim-dap-go",
+    },
+    keys = {
+      { "<F5>", function() require("dap").continue() end, desc = "DAP Continue" },
+      { "<F10>", function() require("dap").step_over() end, desc = "DAP Step Over" },
+      { "<F11>", function() require("dap").step_into() end, desc = "DAP Step Into" },
+      { "<F12>", function() require("dap").step_out() end, desc = "DAP Step Out" },
+      { "<leader>db", function() require("dap").toggle_breakpoint() end, desc = "DAP Toggle Breakpoint" },
+      { "<leader>dB", function() require("dap").set_breakpoint(vim.fn.input("Breakpoint condition: ")) end, desc = "DAP Conditional Breakpoint" },
+      { "<leader>dl", function() require("dap").set_breakpoint(nil, nil, vim.fn.input("Log point message: ")) end, desc = "DAP Log Point" },
+      { "<leader>dr", function() require("dap").repl.open() end, desc = "DAP Open REPL" },
+      { "<leader>dc", function() require("dap").run_to_cursor() end, desc = "DAP Run to Cursor" },
+      { "<leader>dx", function() require("dap").terminate() end, desc = "DAP Terminate" },
+      { "<leader>du", function() require("dapui").toggle() end, desc = "DAP UI Toggle" },
+      { "<leader>de", function() require("dapui").eval(nil, { enter = true }) end, mode = { "n", "v" }, desc = "DAP Eval expression" },
+      -- Go: debug nearest test
+      { "<leader>dt", function() require("dap-go").debug_test() end, ft = "go", desc = "DAP Go: debug test" },
+    },
+    config = function()
+      local dap = require("dap")
+      local dapui = require("dapui")
 
-			dapui.setup()
+      -- Install debug adapters via Mason (debugpy for Python, delve for Go).
+      require("mason-nvim-dap").setup({
+        ensure_installed = { "python", "delve" },
+        automatic_installation = true,
+        handlers = {}, -- use default handlers
+      })
 
-			-- Auto-open/close UI
-			dap.listeners.after.event_initialized["dapui_config"] = function()
-				dapui.open()
-			end
-			dap.listeners.before.event_terminated["dapui_config"] = function()
-				dapui.close()
-			end
-			dap.listeners.before.event_exited["dapui_config"] = function()
-				dapui.close()
-			end
+      dapui.setup()
+      require("nvim-dap-virtual-text").setup()
 
-			-- Keymaps
-			local map = vim.keymap.set
-			map("n", "<F5>", dap.continue, { desc = "DAP Continue" })
-			map("n", "<F10>", dap.step_over, { desc = "DAP Step Over" })
-			map("n", "<F11>", dap.step_into, { desc = "DAP Step Into" })
-			map("n", "<F12>", dap.step_out, { desc = "DAP Step Out" })
-			map("n", "<leader>db", dap.toggle_breakpoint, { desc = "DAP Toggle Breakpoint" })
-			map("n", "<leader>dB", function()
-				dap.set_breakpoint(vim.fn.input("Breakpoint condition: "))
-			end, { desc = "DAP Conditional Breakpoint" })
-			map("n", "<leader>dl", function()
-				dap.set_breakpoint(nil, nil, vim.fn.input("Log point message: "))
-			end, { desc = "DAP Log Point" })
+      -- Python: point dap-python at Mason's debugpy install.
+      local mason_dir = vim.fn.stdpath("data") .. "/mason"
+      local debugpy_python = mason_dir .. "/packages/debugpy/venv/bin/python"
+      if vim.fn.executable(debugpy_python) == 1 then
+        require("dap-python").setup(debugpy_python)
+      else
+        require("dap-python").setup("python3")
+      end
+      -- Prefer the project virtualenv at runtime when one is active.
+      require("dap-python").resolve_python = function()
+        local venv = os.getenv("VIRTUAL_ENV")
+        if venv then
+          return venv .. "/bin/python"
+        end
+        return nil
+      end
 
-			map("n", "<leader>dr", dap.repl.open, { desc = "DAP Open REPL" })
-			map("n", "<leader>dc", dap.run_to_cursor, { desc = "DAP Run to Cursor" })
-			map("n", "<leader>dx", dap.terminate, { desc = "DAP Terminate" })
-			map("n", "<leader>du", dapui.toggle, { desc = "DAP UI Toggle" })
-		end,
-	},
+      -- Go: delve-based configs (debug, test, attach).
+      require("dap-go").setup()
+
+      -- Auto-open/close the UI around sessions.
+      dap.listeners.after.event_initialized["dapui_config"] = function()
+        dapui.open()
+      end
+      dap.listeners.before.event_terminated["dapui_config"] = function()
+        dapui.close()
+      end
+      dap.listeners.before.event_exited["dapui_config"] = function()
+        dapui.close()
+      end
+
+      -- Breakpoint signs.
+      vim.fn.sign_define("DapBreakpoint", { text = "●", texthl = "DiagnosticError", linehl = "", numhl = "" })
+      vim.fn.sign_define("DapStopped", { text = "▶", texthl = "DiagnosticWarn", linehl = "Visual", numhl = "" })
+    end,
+  },
 }

@@ -1,8 +1,14 @@
 return {
   {
     "echasnovski/mini.icons",
-    config = function()
-      require("mini.icons").setup()
+    lazy = true,
+    opts = {},
+    init = function()
+      -- Make plugins that ask for nvim-web-devicons use mini.icons instead.
+      package.preload["nvim-web-devicons"] = function()
+        require("mini.icons").mock_nvim_web_devicons()
+        return package.loaded["nvim-web-devicons"]
+      end
     end,
   },
 }
